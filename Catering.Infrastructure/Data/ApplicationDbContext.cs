@@ -59,5 +59,6 @@ namespace Catering.Infrastructure.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Coupon> Coupons { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
     }
 }
