@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Controllers
@@ -8,6 +8,7 @@ namespace Catering.Controllers
     public class TestController : ControllerBase
     {
         [HttpGet("message")]
+        [Authorize]
         public IActionResult Get()
         {
             return Ok(new { message = "API is working!" });
