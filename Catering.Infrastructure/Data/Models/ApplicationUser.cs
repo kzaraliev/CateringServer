@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using static Catering.Infrastructure.Constants.ApplicationUserConstants;
 
 namespace Catering.Infrastructure.Data.Models
 {
@@ -12,22 +10,6 @@ namespace Catering.Infrastructure.Data.Models
     [Comment("Represents an application user in the system.")]
     public class ApplicationUser : IdentityUser
     {
-        /// <summary>
-        /// Gets or sets the first name of the user.
-        /// </summary>
-        [Required]
-        [MaxLength(FirstNameMaxLength)]
-        [Comment("User's first name.")]
-        public required string FirstName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the last name of the user.
-        /// </summary>
-        [Required]
-        [MaxLength(LastNameMaxLength)]
-        [Comment("User's last name.")]
-        public required string LastName { get; set; }
-
         /// <summary>
         /// Gets or sets the collection of restaurants owned by the user.
         /// </summary>
