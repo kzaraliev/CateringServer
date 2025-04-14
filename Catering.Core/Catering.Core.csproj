@@ -14,8 +14,4 @@
     <ProjectReference Include="..\Catering.Infrastructure\Catering.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\Identity\" />
-  </ItemGroup>
-
 </Project>

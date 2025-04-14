@@ -1,7 +1,11 @@
-﻿namespace Catering.Core.Contracts
+﻿using Catering.Core.DTOs.Identity;
+using Microsoft.AspNetCore.Identity;
+
+namespace Catering.Core.Contracts
 {
     public interface IAuthService
     {
-        Task<string> GenerateTokenString(string email);
+        Task<LoginResponseDto> Login(LoginRequestDto user);
+        Task<IdentityResult> Register(RegisterRequestDto user);
     }
 }
