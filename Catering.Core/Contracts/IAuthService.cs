@@ -7,5 +7,7 @@ namespace Catering.Core.Contracts
     {
         Task<LoginResponseDto> Login(LoginRequestDto user);
         Task<IdentityResult> Register(RegisterRequestDto user);
+        Task ForgotPassword(ForgotPasswordRequestDto user);
+        Task ResetPassword(ResetPasswordRequestDto user);
     }
 }

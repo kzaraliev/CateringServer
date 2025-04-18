@@ -1,7 +1,9 @@
 ﻿using Catering.Core.Contracts;
 using Catering.Core.DTOs.Identity;
+using Catering.Core.Models.Email;
 using Catering.Infrastructure.Data.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -15,11 +17,13 @@ namespace Catering.Core.Services
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IConfiguration config;
+        private readonly IEmailService emailService;
 
-        public AuthService(UserManager<ApplicationUser> _userManager, IConfiguration _config)
+        public AuthService(UserManager<ApplicationUser> _userManager, IConfiguration _config, IEmailService _emailService)
         {
             userManager = _userManager;
             config = _config;
+            emailService = _emailService;
         }
 
         private Task<string> GenerateTokenString(IdentityUser user, IEnumerable<string> roles)
@@ -103,6 +107,43 @@ namespace Catering.Core.Services
             }
 
             return result;
+        }
+
+        public async Task ForgotPassword(ForgotPasswordRequestDto user)
+        {
+            var identityUser = await userManager.FindByEmailAsync(user.Email);
+            if (identityUser != null)
+            {
+                var token = await userManager.GeneratePasswordResetTokenAsync(identityUser);
+                var param = new Dictionary<string, string?>
+                {
+                    {"token", token},
+                    {"email", user.Email}
+                };
+
+                var callback = QueryHelpers.AddQueryString(user.ClientUri, param);
+
+                var message = new Message([user.Email], "Resset password token", callback);
+
+                await emailService.SendEmailAsync(message);
+            }
+        }
+
+        public async Task ResetPassword(ResetPasswordRequestDto user)
+        {
+            var identityUser = await userManager.FindByEmailAsync(user.Email);
+            if (identityUser == null)
+            {
+                return;
+            }
+
+            var result = await userManager.ResetPasswordAsync(identityUser, user.Token, user.Password);
+
+            if (!result.Succeeded)
+            {
+                var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException($"Reset password failed: {errorMessages}");
+            }
         }
     }
 }
