@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Catering.Core.Contracts;
+using Catering.Core.Models.Email;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Controllers
@@ -7,10 +8,18 @@ namespace Catering.Controllers
     [ApiController]
     public class TestController : ControllerBase
     {
+        private readonly IEmailService emailService;
+
+        public TestController(IEmailService _emailService)
+        {
+            emailService = _emailService;
+        }
         [HttpGet("message")]
-        [Authorize]
+        //[Authorize]
         public IActionResult Get()
         {
+            var message = new Message(new string[] { "kzaraliev@gmail.com" }, "Test email", "This is just a test email");
+            emailService.SendEmailAsync(message);
             return Ok(new { message = "API is working!" });
         }
     }
