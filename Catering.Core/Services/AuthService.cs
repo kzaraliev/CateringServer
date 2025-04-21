@@ -1,13 +1,16 @@
 ﻿using Catering.Core.Contracts;
 using Catering.Core.DTOs.Identity;
 using Catering.Core.Models.Email;
+using Catering.Infrastructure.Common;
 using Catering.Infrastructure.Data.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
@@ -18,12 +21,14 @@ namespace Catering.Core.Services
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IConfiguration config;
         private readonly IEmailService emailService;
+        private readonly IRepository repository;
 
-        public AuthService(UserManager<ApplicationUser> _userManager, IConfiguration _config, IEmailService _emailService)
+        public AuthService(UserManager<ApplicationUser> _userManager, IConfiguration _config, IEmailService _emailService, IRepository _repository)
         {
             userManager = _userManager;
             config = _config;
             emailService = _emailService;
+            repository = _repository;
         }
 
         private Task<string> GenerateTokenString(IdentityUser user, IEnumerable<string> roles)
@@ -44,7 +49,7 @@ namespace Catering.Core.Services
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
-            int expiresInMinutes = int.TryParse(config["Jwt:ExpiresInMinutes"], out var parsed) ? parsed : 60;
+            int expiresInMinutes = int.TryParse(config["Jwt:ExpiresInMinutes"], out var parsed) ? parsed : 15;
 
             var tokenDescriptor = new SecurityTokenDescriptor()
             {
@@ -78,12 +83,15 @@ namespace Catering.Core.Services
             var userRoles = await userManager.GetRolesAsync(identityUser);
             string token = await GenerateTokenString(identityUser, userRoles);
 
+            string refreshToken = await CreateRefreshToken(identityUser.Id);
+
             LoginResponseDto response = new LoginResponseDto()
             {
                 UserId = identityUser.Id,
                 Username = identityUser.UserName ?? "Error",
                 Email = identityUser.Email ?? "Error",
                 Token = token,
+                RefreshToken = refreshToken,
                 Roles = userRoles
             };
 
@@ -107,6 +115,46 @@ namespace Catering.Core.Services
             }
 
             return result;
+        }
+
+        public async Task<RefreshTokenResponseDto> RefreshToken(RefreshTokenRequestDto refreshTokenDto)
+        {
+            var principal = GetPrincipalFromExpiredToken(refreshTokenDto.Token);
+
+            var username = principal.Identity?.Name;
+            if (username == null)
+            {
+                throw new SecurityTokenException("Invalid token");
+            }
+
+            var identityUser = await userManager.FindByNameAsync(username);
+            if (identityUser == null)
+            {
+                throw new UnauthorizedAccessException("User not found");
+            }
+
+            var refreshToken = await repository
+                .All<RefreshToken>()
+                .Where(rt => rt.Token == refreshTokenDto.RefreshToken && rt.UserId == identityUser.Id)
+                .FirstOrDefaultAsync();
+
+            if (refreshToken == null || refreshToken.Expires < DateTime.UtcNow || refreshToken.Revoked != null)
+            {
+                throw new SecurityTokenException("Invalid refresh token");
+            }
+
+            refreshToken.Revoked = DateTime.UtcNow;
+            await repository.SaveChangesAsync();
+
+            var userRoles = await userManager.GetRolesAsync(identityUser);
+            string newJwtToken = await GenerateTokenString(identityUser, userRoles);
+            string newRefreshToken = await CreateRefreshToken(identityUser.Id);
+
+            return new RefreshTokenResponseDto
+            {
+                Token = newJwtToken,
+                RefreshToken = newRefreshToken
+            };
         }
 
         public async Task ForgotPassword(ForgotPasswordRequestDto user)
@@ -144,6 +192,68 @@ namespace Catering.Core.Services
                 var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
                 throw new InvalidOperationException($"Reset password failed: {errorMessages}");
             }
+        }
+
+        private string GenerateRefreshTokenString()
+        {
+            var randomNumber = new byte[64];
+
+            using (var numberGenerator = RandomNumberGenerator.Create())
+            {
+                numberGenerator.GetBytes(randomNumber);
+            }
+
+            return Convert.ToBase64String(randomNumber);
+        }
+
+        private async Task<string> CreateRefreshToken(string userId)
+        {
+            var refreshToken = GenerateRefreshTokenString();
+
+            await repository.AddAsync(new RefreshToken()
+            {
+                Token = refreshToken,
+                Expires = DateTime.UtcNow.AddDays(7),
+                Created = DateTime.UtcNow,
+                UserId = userId,
+            });
+
+            await repository.SaveChangesAsync();
+
+            return refreshToken;
+        }
+
+        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        {
+            var jwtSettings = config.GetSection("Jwt");
+            var tokenValidationParams = new TokenValidationParameters
+            {
+                ValidateAudience = true,
+                ValidateIssuer = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Key is not configured in the application settings."))),
+                ValidateLifetime = true,
+                ValidIssuer = jwtSettings["Issuer"],
+                ValidAudience = jwtSettings["Audience"]
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            SecurityToken securityToken;
+
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParams, out securityToken);
+            var jwtSecurityToken = securityToken as JwtSecurityToken;
+
+            if (jwtSecurityToken is null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SecurityTokenException("Invalid token");
+            }
+
+            if (jwtSecurityToken.ValidTo > DateTime.UtcNow)
+            {
+                throw new SecurityTokenException("Token is not expired yet");
+            }
+
+            return principal;
         }
     }
 }

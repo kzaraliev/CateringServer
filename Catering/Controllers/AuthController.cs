@@ -1,6 +1,7 @@
 ﻿using Catering.Core.Contracts;
 using Catering.Core.DTOs.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Catering.Controllers
 {
@@ -32,8 +33,8 @@ namespace Catering.Controllers
             {
                 return Unauthorized("Invalid credentials");
             }
-            catch (Exception) 
-            {            
+            catch (Exception)
+            {
                 return StatusCode(500, $"An error occurred while processing your request");
             }
         }
@@ -100,6 +101,33 @@ namespace Catering.Controllers
             catch (Exception)
             {
                 return StatusCode(500, "An error occurred while processing your request");
+            }
+        }
+
+        [HttpPost("RefreshToken")]
+        public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto refreshTokenRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var result = await authService.RefreshToken(refreshTokenRequest);
+                return Ok(result);
+            }
+            catch (SecurityTokenException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An unexpected error occurred." });
             }
         }
     }

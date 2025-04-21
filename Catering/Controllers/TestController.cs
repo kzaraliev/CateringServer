@@ -1,5 +1,6 @@
 ﻿using Catering.Core.Contracts;
 using Catering.Core.Models.Email;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Controllers
@@ -20,6 +21,13 @@ namespace Catering.Controllers
         {
             var message = new Message(new string[] { "kzaraliev@gmail.com" }, "Test email", "This is just a test email");
             emailService.SendEmailAsync(message);
+            return Ok(new { message = "API is working!" });
+        }
+
+        [HttpGet("Protected")]
+        [Authorize]
+        public IActionResult Protected()
+        {
             return Ok(new { message = "API is working!" });
         }
     }
