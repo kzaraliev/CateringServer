@@ -128,7 +128,7 @@ namespace Catering.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An unexpected error occurred." });
+                return StatusCode(500, new { message = "An unexpected error occurred." });
             }
         }
 
