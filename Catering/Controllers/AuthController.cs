@@ -1,5 +1,6 @@
 ﻿using Catering.Core.Contracts;
 using Catering.Core.DTOs.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
@@ -128,6 +129,36 @@ namespace Catering.Controllers
             catch (Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An unexpected error occurred." });
+            }
+        }
+
+        [HttpPost("Logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var username = User.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return Unauthorized("Username not found in token");
+            }
+
+            try
+            {
+                await authService.Logout(logoutRequest, username);
+                return Ok(new { message = "Logout successful" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred"});
             }
         }
     }

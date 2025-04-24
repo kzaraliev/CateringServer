@@ -117,6 +117,27 @@ namespace Catering.Core.Services
             return result;
         }
 
+        public async Task Logout(LogoutRequestDto logoutRequest, string username)
+        {
+            var user = await userManager.FindByNameAsync(username);
+            if (user == null)
+            {
+                throw new InvalidOperationException("User not found");
+            }
+
+            var refreshToken = await repository
+                .All<RefreshToken>()
+                .FirstOrDefaultAsync(rt => rt.Token == logoutRequest.RefreshToken && rt.UserId == user.Id);
+
+            if (refreshToken == null)
+            {
+                throw new InvalidOperationException("Refresh token not found.");
+            }
+
+            refreshToken.Revoked = DateTime.UtcNow;
+            await repository.SaveChangesAsync();
+        }
+
         public async Task<RefreshTokenResponseDto> RefreshToken(RefreshTokenRequestDto refreshTokenDto)
         {
             var principal = GetPrincipalFromExpiredToken(refreshTokenDto.Token);
