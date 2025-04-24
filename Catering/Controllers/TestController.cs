@@ -2,6 +2,7 @@
 using Catering.Core.Models.Email;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace Catering.Controllers
 {
@@ -15,11 +16,29 @@ namespace Catering.Controllers
         {
             emailService = _emailService;
         }
-        [HttpGet("message")]
-        //[Authorize]
-        public IActionResult Get()
+
+        [HttpGet("Message")]
+        public IActionResult Message()
         {
-            var message = new Message(new string[] { "kzaraliev@gmail.com" }, "Test email", "This is just a test email");
+            var fileName = "test.txt";
+            var content = "This is a test file.";
+            var bytes = Encoding.UTF8.GetBytes(content);
+            var stream = new MemoryStream(bytes);
+
+            IFormFile dummyFile = new FormFile(stream, 0, bytes.Length, "dummyFile", fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/plain"
+            };
+
+            var files = new FormFileCollection { dummyFile };
+
+            var message = new Message(
+                new[] { "kzaraliev@gmail.com" },
+                "Test email with dummy file",
+                "This is just a test email with a dummy file attached. - asdasdasd"
+            );
+
             emailService.SendEmailAsync(message);
             return Ok(new { message = "API is working!" });
         }

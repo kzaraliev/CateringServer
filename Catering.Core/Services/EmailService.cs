@@ -29,10 +29,25 @@ namespace Catering.Core.Services
             email.From.Add(MailboxAddress.Parse(config["Email:From"]));
             email.To.AddRange(message.To);
             email.Subject = message.Subject;
-            email.Body = new TextPart(MimeKit.Text.TextFormat.Html)
+            
+            var bodyBuilder = new BodyBuilder { HtmlBody = string.Format("<p>{0}</p>", message.Content)};
+            
+            if (message.Attachments != null && message.Attachments.Any())
             {
-                Text = message.Content,
-            };
+                byte[] fileBytes;
+                foreach (var attachment in message.Attachments)
+                {
+                    using (var ms = new MemoryStream()) 
+                    {
+                        attachment.CopyTo(ms);
+                        fileBytes = ms.ToArray();
+                    }
+
+                    bodyBuilder.Attachments.Add(attachment.FileName, fileBytes, ContentType.Parse(attachment.ContentType));
+                }
+            }
+
+            email.Body = bodyBuilder.ToMessageBody();
 
             return email;
         }
