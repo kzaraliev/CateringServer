@@ -115,7 +115,7 @@ namespace Catering.Core.Services
                 throw new InvalidOperationException($"Registration failed: {errorMessages}");
             }
 
-            var confirmationToken = WebUtility.UrlEncode(await userManager.GenerateEmailConfirmationTokenAsync(identityUser));
+            var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(identityUser);
             var param = new Dictionary<string, string?>
             {
                 { "token", confirmationToken },
@@ -196,7 +196,7 @@ namespace Catering.Core.Services
             var identityUser = await userManager.FindByEmailAsync(user.Email);
             if (identityUser != null)
             {
-                var token = WebUtility.UrlEncode(await userManager.GeneratePasswordResetTokenAsync(identityUser));
+                var token = await userManager.GeneratePasswordResetTokenAsync(identityUser);
                 var param = new Dictionary<string, string?>
                 {
                     {"token", token},
@@ -219,7 +219,9 @@ namespace Catering.Core.Services
                 return;
             }
 
-            var result = await userManager.ResetPasswordAsync(identityUser, user.Token, user.Password);
+            var decodedToken = WebUtility.UrlDecode(user.Token);
+
+            var result = await userManager.ResetPasswordAsync(identityUser, decodedToken, user.Password);
 
             if (!result.Succeeded)
             {
