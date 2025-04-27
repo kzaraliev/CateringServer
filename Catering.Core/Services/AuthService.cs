@@ -196,7 +196,7 @@ namespace Catering.Core.Services
             var identityUser = await userManager.FindByEmailAsync(user.Email);
             if (identityUser != null)
             {
-                var token = await userManager.GeneratePasswordResetTokenAsync(identityUser);
+                var token = WebUtility.UrlEncode(await userManager.GeneratePasswordResetTokenAsync(identityUser));
                 var param = new Dictionary<string, string?>
                 {
                     {"token", token},
