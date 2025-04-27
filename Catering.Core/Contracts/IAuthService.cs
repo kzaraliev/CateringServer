@@ -11,5 +11,6 @@ namespace Catering.Core.Contracts
         Task ResetPassword(ResetPasswordRequestDto user);
         Task<RefreshTokenResponseDto> RefreshToken(RefreshTokenRequestDto refreshTokenDto);
         Task Logout(LogoutRequestDto logoutRequest, string username);
+        Task EmailConfirmation(string email, string token);
     }
 }

@@ -161,5 +161,19 @@ namespace Catering.Controllers
                 return StatusCode(500, new { message = "An unexpected error occurred"});
             }
         }
+
+        [HttpGet("EmailConfirmation")]
+        public async Task<IActionResult> EmailConfirmation(string email, string token)
+        {
+            try
+            {
+                await authService.EmailConfirmation(email, token);
+                return Ok(new { message = "Email was successfully confirmed" });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+        }
     }
 }

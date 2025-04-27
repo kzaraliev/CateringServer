@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -114,6 +115,18 @@ namespace Catering.Core.Services
                 throw new InvalidOperationException($"Registration failed: {errorMessages}");
             }
 
+            var confirmationToken = WebUtility.UrlEncode(await userManager.GenerateEmailConfirmationTokenAsync(identityUser));
+            var param = new Dictionary<string, string?>
+            {
+                { "token", confirmationToken },
+                {"email", user.Email }
+            };
+
+            var callback = QueryHelpers.AddQueryString(user.ClientUri, param);
+
+            var message = new Message([user.Email], "Email Confirmation Token", callback);
+            await emailService.SendEmailAsync(message);
+
             return result;
         }
 
@@ -212,6 +225,22 @@ namespace Catering.Core.Services
             {
                 var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
                 throw new InvalidOperationException($"Reset password failed: {errorMessages}");
+            }
+        }
+
+        public async Task EmailConfirmation(string email, string token)
+        {
+            var identityUser = await userManager.FindByEmailAsync(email);
+            if (identityUser == null)
+            {
+                throw new UnauthorizedAccessException("User does not exist");
+            }
+
+            var confirmResult = await userManager.ConfirmEmailAsync(identityUser, token);
+
+            if (!confirmResult.Succeeded)
+            {
+                throw new UnauthorizedAccessException($"Invalid email confirmation request");
             }
         }
 
