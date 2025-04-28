@@ -228,6 +228,8 @@ namespace Catering.Core.Services
                 var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
                 throw new InvalidOperationException($"Reset password failed: {errorMessages}");
             }
+
+            await RevokeAllRefreshTokens(identityUser.Id);
         }
 
         public async Task EmailConfirmation(string email, string token)
@@ -306,6 +308,24 @@ namespace Catering.Core.Services
             }
 
             return principal;
+        }
+
+        private async Task RevokeAllRefreshTokens(string userId)
+        {
+            var refreshTokens = await repository
+                .All<RefreshToken>()
+                .Where(rt => rt.UserId == userId && rt.Revoked == null && rt.Expires > DateTime.UtcNow)
+                .ToListAsync();
+
+            foreach (var token in refreshTokens)
+            {
+                token.Revoked = DateTime.UtcNow;
+            }
+
+            if (refreshTokens.Any())
+            {
+                await repository.SaveChangesAsync();
+            }
         }
     }
 }
