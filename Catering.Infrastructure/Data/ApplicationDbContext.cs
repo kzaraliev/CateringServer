@@ -1,4 +1,5 @@
 ﻿using Catering.Infrastructure.Data.Models;
+using Catering.Infrastructure.Data.SeedDb;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,7 @@ namespace Catering.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.ApplyConfiguration(new RoleConfiguration());
             base.OnModelCreating(modelBuilder);
 
             // Solve multiple cascade paths issue by setting appropriate delete behaviors
