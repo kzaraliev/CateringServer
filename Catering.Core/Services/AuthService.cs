@@ -115,6 +115,8 @@ namespace Catering.Core.Services
                 throw new InvalidOperationException($"Registration failed: {errorMessages}");
             }
 
+            await userManager.AddToRoleAsync(identityUser, "User");
+
             var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(identityUser);
             var param = new Dictionary<string, string?>
             {
