@@ -162,12 +162,17 @@ namespace Catering.Controllers
             }
         }
 
-        [HttpGet("EmailConfirmation")]
-        public async Task<IActionResult> EmailConfirmation(string email, string token)
+        [HttpPost("EmailConfirmation")]
+        public async Task<IActionResult> EmailConfirmation(ConfirmEmailRequestDto confirmEmail)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
-                await authService.EmailConfirmation(email, token);
+                await authService.EmailConfirmation(confirmEmail.Email, confirmEmail.Token);
                 return Ok(new { message = "Email was successfully confirmed" });
             }
             catch (UnauthorizedAccessException ex)

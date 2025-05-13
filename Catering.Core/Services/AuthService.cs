@@ -247,7 +247,9 @@ namespace Catering.Core.Services
                 throw new UnauthorizedAccessException("User does not exist");
             }
 
-            var confirmResult = await userManager.ConfirmEmailAsync(identityUser, token);
+            var decodedToken = WebUtility.UrlDecode(token);
+
+            var confirmResult = await userManager.ConfirmEmailAsync(identityUser, decodedToken);
 
             if (!confirmResult.Succeeded)
             {
