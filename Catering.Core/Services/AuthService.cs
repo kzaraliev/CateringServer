@@ -75,6 +75,11 @@ namespace Catering.Core.Services
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
 
+            if (!identityUser.EmailConfirmed)
+            {
+                throw new UnauthorizedAccessException("Email not confirmed. Please confirm your email before logging in.");
+            }
+
             bool passwordValid = await userManager.CheckPasswordAsync(identityUser, user.Password);
             if (!passwordValid)
             {

@@ -30,9 +30,9 @@ namespace Catering.Controllers
                 var result = await authService.Login(user);
                 return Ok(result);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized("Invalid credentials");
+                return Unauthorized(ex.Message);
             }
             catch (Exception)
             {
