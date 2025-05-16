@@ -88,19 +88,6 @@ namespace Catering.Infrastructure.Data.Models
         public ApplicationUser Owner { get; set; } = null!;
 
         /// <summary>
-        /// Gets or sets the identifier for the working time schedule.
-        /// </summary>
-        [Required]
-        [Comment("Working Time Schedule Identifier")]
-        public int WorkingTimeId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the working time schedule of the restaurant.
-        /// </summary>
-        [ForeignKey(nameof(WorkingTimeId))]
-        public WorkingTime WorkingTime { get; set; } = null!;
-
-        /// <summary>
         /// Gets or sets the collection of menu categories offered by the restaurant.
         /// </summary>
         [Comment("Collection of menu categories offered by the restaurant.")]
@@ -123,6 +110,12 @@ namespace Catering.Infrastructure.Data.Models
         /// </summary>
         [Comment("Collection of coupons issued by the restaurant.")]
         public ICollection<Coupon> Coupons { get; set; } = new List<Coupon>();
+
+        /// <summary>
+        /// Gets or sets the collection of working days for the restaurant.
+        /// </summary>
+        [Comment("Collection of working days for the restaurant")]
+        public ICollection<WorkingDay> WorkingDays { get; set; } = new List<WorkingDay>();
     }
 
     /// <summary>

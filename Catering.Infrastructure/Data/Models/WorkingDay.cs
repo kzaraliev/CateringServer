@@ -27,16 +27,14 @@ namespace Catering.Infrastructure.Data.Models
         /// <summary>
         /// Gets or sets the opening time for the day.
         /// </summary>
-        [Required]
         [Comment("Opening time for the day.")]
-        public TimeSpan OpenTime { get; set; }
+        public TimeSpan? OpenTime { get; set; }
 
         /// <summary>
         /// Gets or sets the closing time for the day.
         /// </summary>
-        [Required]
         [Comment("Closing time for the day.")]
-        public TimeSpan CloseTime { get; set; }
+        public TimeSpan? CloseTime { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the restaurant is closed on this day.
@@ -45,16 +43,16 @@ namespace Catering.Infrastructure.Data.Models
         public bool IsClosed { get; set; } = false;
 
         /// <summary>
-        /// Gets or sets the foreign key to the related working time schedule.
+        /// Gets or sets the foreign key to the related restaurant.
         /// </summary>
         [Required]
-        [Comment("Foreign key to the related WorkingTime schedule.")]
-        public int WorkingTimeId { get; set; }
+        [Comment("Foreign key to the related restaurant.")]
+        public int RestaurantId { get; set; }
 
         /// <summary>
         /// Gets or sets the related working time schedule.
         /// </summary>
-        [ForeignKey(nameof(WorkingTimeId))]
-        public WorkingTime WorkingTime { get; set; } = null!;
+        [ForeignKey(nameof(RestaurantId))]
+        public Restaurant Restaurant { get; set; } = null!;
     }
 }

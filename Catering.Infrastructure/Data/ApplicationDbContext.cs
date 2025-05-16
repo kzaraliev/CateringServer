@@ -55,7 +55,6 @@ namespace Catering.Infrastructure.Data
         public DbSet<Restaurant> Restaurants { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<WorkingDay> WorkingDays { get; set; }
-        public DbSet<WorkingTime> WorkingTimes { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Payment> Payments { get; set; }
