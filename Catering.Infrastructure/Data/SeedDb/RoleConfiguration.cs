@@ -10,7 +10,7 @@ namespace Catering.Infrastructure.Data.SeedDb
         {
             var data = new SeedData();
 
-            builder.HasData(new IdentityRole[] { data.SuperAdmin, data.SiteAdmin, data.RestaurantOwner, data.User });
+            builder.HasData(new IdentityRole[] { data.Admin, data.Moderator, data.RestaurantOwner, data.User });
         }
     }
 }

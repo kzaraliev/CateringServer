@@ -1,4 +1,5 @@
-﻿using Catering.Core.Contracts;
+﻿using Catering.Core.Constants;
+using Catering.Core.Contracts;
 using Catering.Core.DTOs.Identity;
 using Catering.Core.Models.Email;
 using Catering.Infrastructure.Common;
@@ -120,6 +121,8 @@ namespace Catering.Core.Services
                 var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
                 throw new InvalidOperationException($"Registration failed: {errorMessages}");
             }
+
+            await userManager.AddToRoleAsync(identityUser, RoleNames.User);
 
             await SendConfirmationEmail(identityUser, user.ClientUri);
 
