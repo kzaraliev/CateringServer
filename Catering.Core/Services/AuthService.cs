@@ -77,7 +77,8 @@ namespace Catering.Core.Services
 
             if (!identityUser.EmailConfirmed)
             {
-                throw new UnauthorizedAccessException("Email not confirmed. Please confirm your email before logging in.");
+                await SendConfirmationEmail(identityUser, user.ClientUri);
+                throw new UnauthorizedAccessException("Email not confirmed. A new confirmation email has been sent to your address.");
             }
 
             bool passwordValid = await userManager.CheckPasswordAsync(identityUser, user.Password);
@@ -120,19 +121,7 @@ namespace Catering.Core.Services
                 throw new InvalidOperationException($"Registration failed: {errorMessages}");
             }
 
-            await userManager.AddToRoleAsync(identityUser, "User");
-
-            var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(identityUser);
-            var param = new Dictionary<string, string?>
-            {
-                { "token", confirmationToken },
-                {"email", user.Email }
-            };
-
-            var callback = QueryHelpers.AddQueryString(user.ClientUri, param);
-
-            var message = new Message([user.Email], "Email Confirmation Token", callback);
-            await emailService.SendEmailAsync(message);
+            await SendConfirmationEmail(identityUser, user.ClientUri);
 
             return result;
         }
@@ -336,5 +325,25 @@ namespace Catering.Core.Services
                 await repository.SaveChangesAsync();
             }
         }
+
+        private async Task SendConfirmationEmail(ApplicationUser user, string clientUri)
+        {
+            if (string.IsNullOrWhiteSpace(user.Email))
+            {
+                throw new InvalidOperationException("Cannot send confirmation email: user's email is missing.");
+            }
+
+            var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            var param = new Dictionary<string, string?>
+            {
+                { "token", confirmationToken },
+                { "email", user.Email }
+            };
+
+            var callback = QueryHelpers.AddQueryString(clientUri, param);
+            var message = new Message([user.Email], "Email Confirmation Token", callback);
+            await emailService.SendEmailAsync(message);
+        }
+
     }
 }

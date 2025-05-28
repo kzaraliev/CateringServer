@@ -11,5 +11,8 @@ namespace Catering.Core.DTOs.Identity
 
         [Required(ErrorMessage = RequiredMessage)]
         public required string Password { get; set; }
+
+        [Required(ErrorMessage = RequiredMessage)]
+        public required string ClientUri { get; set; }
     }
 }
