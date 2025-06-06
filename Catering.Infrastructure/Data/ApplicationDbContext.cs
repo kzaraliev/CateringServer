@@ -17,7 +17,6 @@ namespace Catering.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new RoleConfiguration());
             base.OnModelCreating(modelBuilder);
 
-            // Solve multiple cascade paths issue by setting appropriate delete behaviors
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.Restaurant)
                 .WithMany(r => r.Orders)
@@ -61,5 +60,6 @@ namespace Catering.Infrastructure.Data
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Coupon> Coupons { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<PartnershipRequest> PartnershipRequests { get; set; }
     }
 }
