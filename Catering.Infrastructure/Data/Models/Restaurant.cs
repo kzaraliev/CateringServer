@@ -60,6 +60,13 @@ namespace Catering.Infrastructure.Data.Models
         public required string Address { get; set; }
 
         /// <summary>
+        /// Gets or sets the public status of the restaurant.
+        /// </summary>
+        [Required]
+        [Comment("Is restaurant public")]
+        public required bool IsPublic { get; set; } = false;
+
+        /// <summary>
         /// Gets or sets the URL address of the restaurant image.
         /// </summary>
         [Url]
@@ -70,16 +77,14 @@ namespace Catering.Infrastructure.Data.Models
         /// <summary>
         /// Gets or sets the delivery methods supported by the restaurant.
         /// </summary>
-        [Required]
         [Comment("Delivery methods supported by the restaurant")]
-        public required RestaurantDeliveryMethods SupportedDeliveryMethods { get; set; }
+        public RestaurantDeliveryMethods SupportedDeliveryMethods { get; set; }
 
         /// <summary>
         /// Gets or sets the identifier of the restaurant owner.
         /// </summary>
-        [Required]
         [Comment("Owner Identifier")]
-        public required string OwnerId { get; set; }
+        public string? OwnerId { get; set; }
 
         /// <summary>
         /// Gets or sets the owner of the restaurant.

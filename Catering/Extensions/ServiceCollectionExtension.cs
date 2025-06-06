@@ -20,6 +20,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IRestaurantService, RestaurantService>();
+            services.AddScoped<IPartnershipService, PartnershipService>();
 
             services.Configure<FormOptions>(options =>
             {

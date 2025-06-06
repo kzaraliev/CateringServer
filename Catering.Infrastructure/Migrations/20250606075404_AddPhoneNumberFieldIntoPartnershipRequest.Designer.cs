@@ -4,6 +4,7 @@ using Catering.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Catering.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250606075404_AddPhoneNumberFieldIntoPartnershipRequest")]
+    partial class AddPhoneNumberFieldIntoPartnershipRequest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -360,12 +363,6 @@ namespace Catering.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)")
-                        .HasComment("Restaurant Address");
-
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime2")
                         .HasComment("Timestamp of approval");
@@ -375,6 +372,15 @@ namespace Catering.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
                         .HasComment("Email of the person requesting the partnership");
+
+                    b.Property<string>("InvitationToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)")
+                        .HasComment("Invitation token for unregistered users");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit")
+                        .HasComment("Whether the request has been approved");
 
                     b.Property<string>("Message")
                         .HasMaxLength(1000)
@@ -387,9 +393,12 @@ namespace Catering.Infrastructure.Migrations
                         .HasColumnType("nvarchar(30)")
                         .HasComment("Restaurant Phone Number");
 
+                    b.Property<string>("RequestedByUserId")
+                        .HasColumnType("nvarchar(450)")
+                        .HasComment("User ID of the requester (if logged in)");
+
                     b.Property<int?>("RestaurantId")
-                        .HasColumnType("int")
-                        .HasComment("Foreign key to the related restaurant created from this request");
+                        .HasColumnType("int");
 
                     b.Property<string>("RestaurantName")
                         .IsRequired()
@@ -397,11 +406,13 @@ namespace Catering.Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasComment("Name of the restaurant in the request");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int")
-                        .HasComment("The status of the partner request.");
+                    b.Property<DateTime?>("TokenExpiresAt")
+                        .HasColumnType("datetime2")
+                        .HasComment("Expiration timestamp for the invitation token");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RequestedByUserId");
 
                     b.HasIndex("RestaurantId");
 
@@ -532,10 +543,6 @@ namespace Catering.Infrastructure.Migrations
                         .HasColumnType("nvarchar(2048)")
                         .HasComment("Restaurant Image URL Address");
 
-                    b.Property<bool>("IsPublic")
-                        .HasColumnType("bit")
-                        .HasComment("Is restaurant public");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -543,6 +550,7 @@ namespace Catering.Infrastructure.Migrations
                         .HasComment("Restaurant Name");
 
                     b.Property<string>("OwnerId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)")
                         .HasComment("Owner Identifier");
 
@@ -993,9 +1001,15 @@ namespace Catering.Infrastructure.Migrations
 
             modelBuilder.Entity("Catering.Infrastructure.Data.Models.PartnershipRequest", b =>
                 {
+                    b.HasOne("Catering.Infrastructure.Data.Models.ApplicationUser", "RequestedByUser")
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId");
+
                     b.HasOne("Catering.Infrastructure.Data.Models.Restaurant", "Restaurant")
                         .WithMany()
                         .HasForeignKey("RestaurantId");
+
+                    b.Navigation("RequestedByUser");
 
                     b.Navigation("Restaurant");
                 });
@@ -1026,7 +1040,9 @@ namespace Catering.Infrastructure.Migrations
                 {
                     b.HasOne("Catering.Infrastructure.Data.Models.ApplicationUser", "Owner")
                         .WithMany("Restaurants")
-                        .HasForeignKey("OwnerId");
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Owner");
                 });

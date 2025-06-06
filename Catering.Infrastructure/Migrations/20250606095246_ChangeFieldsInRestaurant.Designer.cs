@@ -4,6 +4,7 @@ using Catering.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Catering.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250606095246_ChangeFieldsInRestaurant")]
+    partial class ChangeFieldsInRestaurant
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -376,6 +379,11 @@ namespace Catering.Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasComment("Email of the person requesting the partnership");
 
+                    b.Property<string>("InvitationToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)")
+                        .HasComment("Invitation token for unregistered users");
+
                     b.Property<string>("Message")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)")
@@ -400,6 +408,10 @@ namespace Catering.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int")
                         .HasComment("The status of the partner request.");
+
+                    b.Property<DateTime?>("TokenExpiresAt")
+                        .HasColumnType("datetime2")
+                        .HasComment("Expiration timestamp for the invitation token");
 
                     b.HasKey("Id");
 

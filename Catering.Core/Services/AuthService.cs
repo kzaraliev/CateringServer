@@ -122,7 +122,25 @@ namespace Catering.Core.Services
                 throw new InvalidOperationException($"Registration failed: {errorMessages}");
             }
 
-            await userManager.AddToRoleAsync(identityUser, RoleNames.User);
+            List<string> roles = [RoleNames.User];
+
+            List<Restaurant> restaurants = await repository
+                .All<Restaurant>()
+                .Where(r => r.ContactEmail == user.Email && r.OwnerId == null)
+                .ToListAsync();
+
+            foreach (var restaurant in restaurants)
+            {
+                restaurant.OwnerId = identityUser.Id;
+            }
+
+            if (restaurants.Count > 0)
+            {
+                await repository.SaveChangesAsync();
+                roles.Add(RoleNames.RestaurantOwner);
+            }
+
+            await userManager.AddToRolesAsync(identityUser, roles);
 
             await SendConfirmationEmail(identityUser, user.ClientUri);
 

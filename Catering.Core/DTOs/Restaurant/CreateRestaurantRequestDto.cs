@@ -12,9 +12,6 @@ namespace Catering.Core.DTOs.Restaurant
         [Required(ErrorMessage = RequiredMessage)]
         public string Name { get; set; } = null!;
 
-        [MaxLength(DescriptionMaxLength)]
-        public string? Description { get; set; }
-
         [EmailAddress]
         [Required(ErrorMessage = RequiredMessage)]
         public string ContactEmail { get; set; } = null!;
@@ -27,15 +24,6 @@ namespace Catering.Core.DTOs.Restaurant
         [Required(ErrorMessage = RequiredMessage)]
         public string Address { get; set; } = null!;
 
-        [MaxLength(ImageUrlMaxLength)]
-        public string? ImageUrl { get; set; }
-
-        [EnumDataType(typeof(RestaurantDeliveryMethods))]
-        public RestaurantDeliveryMethods SupportedDeliveryMethods { get; set; }
-
-        [Required(ErrorMessage = RequiredMessage)]
-        public string OwnerId { get; set; } = null!;
-
-        public List<WorkingDayDto> WorkingDays { get; set; } = new();
+        public string? OwnerId { get; set; }
     }
 }
