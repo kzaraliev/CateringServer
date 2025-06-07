@@ -67,10 +67,10 @@ namespace Catering.Infrastructure.Data.Models
         public PartnershipRequestStatus Status { get; set; } = PartnershipRequestStatus.Pending;
 
         /// <summary>
-        /// Gets or sets the timestamp when the request was approved.
+        /// Gets or sets the timestamp when the request was processed (approved or rejected).
         /// </summary>
-        [Comment("Timestamp of approval")]
-        public DateTime? ApprovedAt { get; set; }
+        [Comment("Timestamp of request processing")]
+        public DateTime? ProcessedAt { get; set; }
 
         /// <summary>
         /// Gets or sets the foreign key to the related restaurant.

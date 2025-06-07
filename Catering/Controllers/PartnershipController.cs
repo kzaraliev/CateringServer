@@ -1,7 +1,6 @@
 ﻿using Catering.Core.Contracts;
 using Catering.Core.DTOs.Partnership;
 using Catering.Infrastructure.Data.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -21,17 +20,17 @@ namespace Catering.Controllers
             userManager = _userManager;
         }
 
-        [HttpPost("ApproveRequest")]
-        public async Task<IActionResult> ApproveRequest(int requestId)
+        [HttpPost("ProcessRequest")]
+        public async Task<IActionResult> ProcessRequest(ManagePartnershipDto manageRequestDto)
         {
-            if (requestId <= 0)
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Invalid request ID.");
+                return BadRequest(ModelState);
             }
 
             try
             {
-                await partnershipService.ApproveRequestAsync(requestId);
+                await partnershipService.ProcessRequestAsync(manageRequestDto);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
@@ -50,7 +49,7 @@ namespace Catering.Controllers
 
 
         [HttpPost("SubmitRequest")]
-        public async Task<IActionResult> SubmitRequest([FromBody] PartnershipDto dto)
+        public async Task<IActionResult> SubmitRequest([FromBody] PartnershipDto partnershipDto)
         {
             if (!ModelState.IsValid)
             {
@@ -59,7 +58,7 @@ namespace Catering.Controllers
 
             try
             {
-                int requestId = await partnershipService.SubmitRequestAsync(dto);
+                int requestId = await partnershipService.SubmitRequestAsync(partnershipDto);
                 return Ok(new { Message = "Request submitted successfully.", RequestId = requestId });
             }
             catch(ValidationException ex)

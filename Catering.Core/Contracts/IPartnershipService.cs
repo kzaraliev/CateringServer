@@ -5,6 +5,6 @@ namespace Catering.Core.Contracts
     public interface IPartnershipService
     {
         Task<int> SubmitRequestAsync(PartnershipDto dto);
-        Task ApproveRequestAsync(int requestId);
+        Task ProcessRequestAsync(ManagePartnershipDto manageRequestDto);
     }
 }
