@@ -32,7 +32,7 @@ namespace Catering.Controllers
         }
 
 
-        [HttpPost("ProcessRequest")]
+        [HttpPost("process-request")]
         public async Task<IActionResult> ProcessRequest(ManagePartnershipDto manageRequestDto)
         {
             if (!ModelState.IsValid)
@@ -60,7 +60,7 @@ namespace Catering.Controllers
         }
 
 
-        [HttpPost("SubmitRequest")]
+        [HttpPost]
         public async Task<IActionResult> SubmitRequest([FromBody] PartnershipDto partnershipDto)
         {
             if (!ModelState.IsValid)

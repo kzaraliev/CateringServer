@@ -15,7 +15,7 @@ namespace Catering.Controllers
             restaurantService = _restaurantService;
         }
 
-        [HttpPost("CreateRestaurant")]
+        [HttpPost("create-restaurant")]
         public async Task<IActionResult> CreateRestaurant(CreateRestaurantRequestDto restaurantDto)
         {
             if (!ModelState.IsValid)

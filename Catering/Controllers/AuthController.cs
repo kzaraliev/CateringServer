@@ -17,7 +17,7 @@ namespace Catering.Controllers
             authService = _authService;
         }
 
-        [HttpPost("Login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDto user)
         {
             if (!ModelState.IsValid)
@@ -40,7 +40,7 @@ namespace Catering.Controllers
             }
         }
 
-        [HttpPost("Register")]
+        [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequestDto user)
         {
             if (!ModelState.IsValid)
@@ -63,7 +63,7 @@ namespace Catering.Controllers
             }
         }
 
-        [HttpPost("ForgotPassword")]
+        [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto user)
         {
             if (!ModelState.IsValid)
@@ -82,7 +82,7 @@ namespace Catering.Controllers
             }
         }
 
-        [HttpPost("ResetPassword")]
+        [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto user)
         {
             if (!ModelState.IsValid)
@@ -105,7 +105,7 @@ namespace Catering.Controllers
             }
         }
 
-        [HttpPost("RefreshToken")]
+        [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto refreshTokenRequest)
         {
             if (!ModelState.IsValid)
@@ -132,7 +132,7 @@ namespace Catering.Controllers
             }
         }
 
-        [HttpPost("Logout")]
+        [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest)
         {
@@ -162,7 +162,7 @@ namespace Catering.Controllers
             }
         }
 
-        [HttpPost("EmailConfirmation")]
+        [HttpPost("email-confirmation")]
         public async Task<IActionResult> EmailConfirmation(ConfirmEmailRequestDto confirmEmail)
         {
             if (!ModelState.IsValid)
