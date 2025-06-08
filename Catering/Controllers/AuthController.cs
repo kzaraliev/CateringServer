@@ -1,4 +1,5 @@
-﻿using Catering.Core.Contracts;
+﻿using Catering.Core.Constants;
+using Catering.Core.Contracts;
 using Catering.Core.DTOs.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ namespace Catering.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = RoleNames.User)]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService authService;
@@ -18,6 +20,7 @@ namespace Catering.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(LoginRequestDto user)
         {
             if (!ModelState.IsValid)
@@ -41,6 +44,7 @@ namespace Catering.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterRequestDto user)
         {
             if (!ModelState.IsValid)
@@ -64,6 +68,7 @@ namespace Catering.Controllers
         }
 
         [HttpPost("forgot-password")]
+        [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto user)
         {
             if (!ModelState.IsValid)
@@ -83,6 +88,7 @@ namespace Catering.Controllers
         }
 
         [HttpPost("reset-password")]
+        [AllowAnonymous]
         public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto user)
         {
             if (!ModelState.IsValid)
@@ -106,6 +112,7 @@ namespace Catering.Controllers
         }
 
         [HttpPost("refresh-token")]
+        [AllowAnonymous]
         public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto refreshTokenRequest)
         {
             if (!ModelState.IsValid)
@@ -133,7 +140,6 @@ namespace Catering.Controllers
         }
 
         [HttpPost("logout")]
-        [Authorize]
         public async Task<IActionResult> Logout(LogoutRequestDto logoutRequest)
         {
             if (!ModelState.IsValid)
@@ -163,6 +169,7 @@ namespace Catering.Controllers
         }
 
         [HttpPost("email-confirmation")]
+        [AllowAnonymous]
         public async Task<IActionResult> EmailConfirmation(ConfirmEmailRequestDto confirmEmail)
         {
             if (!ModelState.IsValid)

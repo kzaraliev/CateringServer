@@ -1,5 +1,7 @@
-﻿using Catering.Core.Contracts;
+﻿using Catering.Core.Constants;
+using Catering.Core.Contracts;
 using Catering.Core.DTOs.Partnership;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -7,6 +9,7 @@ namespace Catering.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = $"{RoleNames.Moderator}, {RoleNames.Admin}")]
     public class PartnershipController : ControllerBase
     {
         private readonly IPartnershipService partnershipService;
@@ -61,6 +64,7 @@ namespace Catering.Controllers
 
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> SubmitRequest([FromBody] PartnershipDto partnershipDto)
         {
             if (!ModelState.IsValid)
