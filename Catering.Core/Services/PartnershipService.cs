@@ -27,6 +27,76 @@ namespace Catering.Core.Services
             emailService = _emailService;
         }
 
+        public async Task<PartnershipRequestListDto> GetAllPartnershipRequestsAsync(PartnershipRequestQueryParametersDto queryParams)
+        {
+            var query = repository.AllReadOnly<PartnershipRequest>();
+
+            //Status filter
+            if (!string.IsNullOrEmpty(queryParams.Status) &&
+                Enum.TryParse<PartnershipRequestStatus>(queryParams.Status, true, out var status))
+            {
+                    query = query.Where(r => r.Status == status);
+            }
+
+            //Search
+            if (!string.IsNullOrEmpty(queryParams.SearchTerm))
+            {
+                string term = queryParams.SearchTerm.Trim().ToLower();
+
+                query = query.Where(r =>
+                    r.RestaurantName.ToLower().Contains(term) ||
+                    r.ContactEmail.ToLower().Contains(term) ||
+                    r.Address.ToLower().Contains(term));
+            }
+
+            int totalCount = await query.CountAsync();
+
+            // Sort
+            query = queryParams.SortBy switch
+            {
+                "ContactEmail" => queryParams.SortDescending ?
+                    query.OrderByDescending(r => r.ContactEmail) :
+                    query.OrderBy(r => r.ContactEmail),
+                "CreatedAt" => queryParams.SortDescending ?
+                    query.OrderByDescending(r => r.CreatedAt) :
+                    query.OrderBy(r => r.CreatedAt),
+                _ => queryParams.SortDescending ?
+                    query.OrderByDescending(r => r.Id) :
+                    query.OrderBy(r => r.Id)
+            };
+
+            // Pagination
+            query = query
+                .Skip((queryParams.Page - 1) * queryParams.PageSize)
+                .Take(queryParams.PageSize);
+
+            var items = await query
+                .Select(p => new PartnershipItemsDto
+                {
+                    Id = p.Id,
+                    RestaurantName = p.RestaurantName,
+                    ContactEmail = p.ContactEmail,
+                    PhoneNumber = p.PhoneNumber,
+                    Status = p.Status,
+                    CreatedAt = p.CreatedAt,
+                    ProcessedAt = p.ProcessedAt,
+                    RestaurantId = p.RestaurantId,
+                    Address = p.Address,
+                })
+                .ToListAsync();
+
+            var response = new PartnershipRequestListDto
+            {
+                TotalCount = totalCount,
+                PageNumber = queryParams.Page,
+                PageSize = queryParams.PageSize,
+                Items = items
+            };
+
+            return response;
+        }
+
+
         public async Task ProcessRequestAsync(ManagePartnershipDto manageRequestDto)
         {
             var request = await repository
@@ -61,7 +131,7 @@ namespace Catering.Core.Services
                 request.Status = PartnershipRequestStatus.Approved;
                 request.RestaurantId = restaurantId;
             }
-            else 
+            else
             {
                 request.Status = PartnershipRequestStatus.Rejected;
             }
@@ -85,11 +155,12 @@ namespace Catering.Core.Services
 
             var request = new PartnershipRequest
             {
-                RestaurantName = partnershipDto.RestaurantName,
-                ContactEmail = partnershipDto.ContactEmail,
-                PhoneNumber = partnershipDto.PhoneNumber,
-                Message = partnershipDto.Message,
-                Address = partnershipDto.Address,
+                RestaurantName = partnershipDto.RestaurantName.Trim(),
+                ContactEmail = partnershipDto.ContactEmail.Trim(),
+                PhoneNumber = partnershipDto.PhoneNumber.Trim(),
+                Message = partnershipDto.Message.Trim(),
+                Address = partnershipDto.Address.Trim(),
+                CreatedAt = DateTime.UtcNow,
             };
 
             await repository.AddAsync(request);

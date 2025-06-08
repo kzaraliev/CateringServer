@@ -1,7 +1,5 @@
 ﻿using Catering.Core.Contracts;
 using Catering.Core.DTOs.Partnership;
-using Catering.Infrastructure.Data.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -12,13 +10,27 @@ namespace Catering.Controllers
     public class PartnershipController : ControllerBase
     {
         private readonly IPartnershipService partnershipService;
-        private readonly UserManager<ApplicationUser> userManager;
 
-        public PartnershipController(IPartnershipService _partnershipService, UserManager<ApplicationUser> _userManager)
+        public PartnershipController(IPartnershipService _partnershipService)
         {
             partnershipService = _partnershipService;
-            userManager = _userManager;
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPartnershipRequests([FromQuery] PartnershipRequestQueryParametersDto queryParams)
+        {
+            try
+            {
+                var requests = await partnershipService.GetAllPartnershipRequestsAsync(queryParams);
+                return Ok(requests);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, $"An error occurred while processing your request");
+            }
+            
+        }
+
 
         [HttpPost("ProcessRequest")]
         public async Task<IActionResult> ProcessRequest(ManagePartnershipDto manageRequestDto)

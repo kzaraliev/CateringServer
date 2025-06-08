@@ -67,6 +67,13 @@ namespace Catering.Infrastructure.Data.Models
         public PartnershipRequestStatus Status { get; set; } = PartnershipRequestStatus.Pending;
 
         /// <summary>
+        /// Gets or sets the timestamp when the request was was created.
+        /// </summary>
+        [Required]
+        [Comment("Timestamp when the request was created")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
         /// Gets or sets the timestamp when the request was processed (approved or rejected).
         /// </summary>
         [Comment("Timestamp of request processing")]
