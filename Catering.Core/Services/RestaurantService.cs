@@ -14,7 +14,7 @@ namespace Catering.Core.Services
             repository = _repository;
         }
 
-        public async Task<int> CreateRestaurant(CreateRestaurantRequestDto restaurantDto)
+        public async Task<int> CreateRestaurantAsync(CreateRestaurantRequestDto restaurantDto)
         {
             var restaurant = new Restaurant
             {

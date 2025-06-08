@@ -5,12 +5,12 @@ namespace Catering.Core.Contracts
 {
     public interface IAuthService
     {
-        Task<LoginResponseDto> Login(LoginRequestDto user);
-        Task<IdentityResult> Register(RegisterRequestDto user);
-        Task ForgotPassword(ForgotPasswordRequestDto user);
-        Task ResetPassword(ResetPasswordRequestDto user);
-        Task<RefreshTokenResponseDto> RefreshToken(RefreshTokenRequestDto refreshTokenDto);
-        Task Logout(LogoutRequestDto logoutRequest, string username);
-        Task EmailConfirmation(string email, string token);
+        Task<LoginResponseDto> LoginAsync(LoginRequestDto user);
+        Task<IdentityResult> RegisterAsync(RegisterRequestDto user);
+        Task ForgotPasswordAsync(ForgotPasswordRequestDto user);
+        Task ResetPasswordAsync(ResetPasswordRequestDto user);
+        Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto refreshTokenDto);
+        Task LogoutAsync(LogoutRequestDto logoutRequest, string username);
+        Task EmailConfirmationAsync(string email, string token);
     }
 }

@@ -33,42 +33,7 @@ namespace Catering.Core.Services
             repository = _repository;
         }
 
-        private Task<string> GenerateTokenString(IdentityUser user, IEnumerable<string> roles)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(config["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Key is not configured in the application settings."));
-
-            var claims = new List<Claim>()
-            {
-                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-                new(JwtRegisteredClaimNames.NameId, user.Id),
-                new(ClaimTypes.Name, user.UserName ?? "")
-            };
-
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            int expiresInMinutes = int.TryParse(config["Jwt:ExpiresInMinutes"], out var parsed) ? parsed : 15;
-
-            var tokenDescriptor = new SecurityTokenDescriptor()
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(expiresInMinutes),
-                Issuer = config["Jwt:Issuer"],
-                Audience = config["Jwt:Audience"],
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
-
-            return Task.FromResult(tokenString);
-        }
-
-        public async Task<LoginResponseDto> Login(LoginRequestDto user)
+        public async Task<LoginResponseDto> LoginAsync(LoginRequestDto user)
         {
             var identityUser = await userManager.FindByEmailAsync(user.Email);
             if (identityUser == null)
@@ -78,7 +43,7 @@ namespace Catering.Core.Services
 
             if (!identityUser.EmailConfirmed)
             {
-                await SendConfirmationEmail(identityUser, user.ClientUri);
+                await SendConfirmationEmailAsync(identityUser, user.ClientUri);
                 throw new UnauthorizedAccessException("Email not confirmed. A new confirmation email has been sent to your address.");
             }
 
@@ -89,9 +54,9 @@ namespace Catering.Core.Services
             }
 
             var userRoles = await userManager.GetRolesAsync(identityUser);
-            string token = await GenerateTokenString(identityUser, userRoles);
+            string token = await GenerateTokenStringAsync(identityUser, userRoles);
 
-            string refreshToken = await CreateRefreshToken(identityUser.Id);
+            string refreshToken = await CreateRefreshTokenAsync(identityUser.Id);
 
             LoginResponseDto response = new LoginResponseDto()
             {
@@ -106,7 +71,7 @@ namespace Catering.Core.Services
             return response;
         }
 
-        public async Task<IdentityResult> Register(RegisterRequestDto user)
+        public async Task<IdentityResult> RegisterAsync(RegisterRequestDto user)
         {
             var identityUser = new ApplicationUser()
             {
@@ -142,12 +107,12 @@ namespace Catering.Core.Services
 
             await userManager.AddToRolesAsync(identityUser, roles);
 
-            await SendConfirmationEmail(identityUser, user.ClientUri);
+            await SendConfirmationEmailAsync(identityUser, user.ClientUri);
 
             return result;
         }
 
-        public async Task Logout(LogoutRequestDto logoutRequest, string username)
+        public async Task LogoutAsync(LogoutRequestDto logoutRequest, string username)
         {
             var user = await userManager.FindByNameAsync(username);
             if (user == null)
@@ -168,7 +133,7 @@ namespace Catering.Core.Services
             await repository.SaveChangesAsync();
         }
 
-        public async Task<RefreshTokenResponseDto> RefreshToken(RefreshTokenRequestDto refreshTokenDto)
+        public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto refreshTokenDto)
         {
             var principal = GetPrincipalFromExpiredToken(refreshTokenDto.Token);
 
@@ -198,8 +163,8 @@ namespace Catering.Core.Services
             await repository.SaveChangesAsync();
 
             var userRoles = await userManager.GetRolesAsync(identityUser);
-            string newJwtToken = await GenerateTokenString(identityUser, userRoles);
-            string newRefreshToken = await CreateRefreshToken(identityUser.Id);
+            string newJwtToken = await GenerateTokenStringAsync(identityUser, userRoles);
+            string newRefreshToken = await CreateRefreshTokenAsync(identityUser.Id);
 
             return new RefreshTokenResponseDto
             {
@@ -208,7 +173,7 @@ namespace Catering.Core.Services
             };
         }
 
-        public async Task ForgotPassword(ForgotPasswordRequestDto user)
+        public async Task ForgotPasswordAsync(ForgotPasswordRequestDto user)
         {
             var identityUser = await userManager.FindByEmailAsync(user.Email);
             if (identityUser != null)
@@ -228,7 +193,7 @@ namespace Catering.Core.Services
             }
         }
 
-        public async Task ResetPassword(ResetPasswordRequestDto user)
+        public async Task ResetPasswordAsync(ResetPasswordRequestDto user)
         {
             var identityUser = await userManager.FindByEmailAsync(user.Email);
             if (identityUser == null)
@@ -246,10 +211,10 @@ namespace Catering.Core.Services
                 throw new InvalidOperationException($"Reset password failed: {errorMessages}");
             }
 
-            await RevokeAllRefreshTokens(identityUser.Id);
+            await RevokeAllRefreshTokensAsync(identityUser.Id);
         }
 
-        public async Task EmailConfirmation(string email, string token)
+        public async Task EmailConfirmationAsync(string email, string token)
         {
             var identityUser = await userManager.FindByEmailAsync(email);
             if (identityUser == null)
@@ -279,7 +244,7 @@ namespace Catering.Core.Services
             return Convert.ToBase64String(randomNumber);
         }
 
-        private async Task<string> CreateRefreshToken(string userId)
+        private async Task<string> CreateRefreshTokenAsync(string userId)
         {
             var refreshToken = GenerateRefreshTokenString();
 
@@ -329,7 +294,7 @@ namespace Catering.Core.Services
             return principal;
         }
 
-        private async Task RevokeAllRefreshTokens(string userId)
+        private async Task RevokeAllRefreshTokensAsync(string userId)
         {
             var refreshTokens = await repository
                 .All<RefreshToken>()
@@ -347,7 +312,7 @@ namespace Catering.Core.Services
             }
         }
 
-        private async Task SendConfirmationEmail(ApplicationUser user, string clientUri)
+        private async Task SendConfirmationEmailAsync(ApplicationUser user, string clientUri)
         {
             if (string.IsNullOrWhiteSpace(user.Email))
             {
@@ -366,5 +331,39 @@ namespace Catering.Core.Services
             await emailService.SendEmailAsync(message);
         }
 
+        private Task<string> GenerateTokenStringAsync(IdentityUser user, IEnumerable<string> roles)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(config["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Key is not configured in the application settings."));
+
+            var claims = new List<Claim>()
+            {
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                new(JwtRegisteredClaimNames.NameId, user.Id),
+                new(ClaimTypes.Name, user.UserName ?? "")
+            };
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            int expiresInMinutes = int.TryParse(config["Jwt:ExpiresInMinutes"], out var parsed) ? parsed : 15;
+
+            var tokenDescriptor = new SecurityTokenDescriptor()
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(expiresInMinutes),
+                Issuer = config["Jwt:Issuer"],
+                Audience = config["Jwt:Audience"],
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            return Task.FromResult(tokenString);
+        }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Catering.Core.Contracts;
 using Catering.Core.DTOs.Restaurant;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catering.Controllers
@@ -26,7 +25,7 @@ namespace Catering.Controllers
 
             try
             {
-                var result = await restaurantService.CreateRestaurant(restaurantDto);
+                var result = await restaurantService.CreateRestaurantAsync(restaurantDto);
                 return StatusCode(201, new { Message = "Restaurant created successfully", RestaurantId = result });
             }
             catch (InvalidOperationException ex)

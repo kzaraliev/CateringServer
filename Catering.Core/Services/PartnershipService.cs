@@ -126,7 +126,7 @@ namespace Catering.Core.Services
                     OwnerId = user?.Id,
                 };
 
-                int restaurantId = await restaurantService.CreateRestaurant(restaurantDto);
+                int restaurantId = await restaurantService.CreateRestaurantAsync(restaurantDto);
 
                 request.Status = PartnershipRequestStatus.Approved;
                 request.RestaurantId = restaurantId;
@@ -139,7 +139,7 @@ namespace Catering.Core.Services
             request.ProcessedAt = DateTime.UtcNow;
             await repository.SaveChangesAsync();
 
-            await SendProcessedRequestInfo(request.ContactEmail, manageRequestDto.isApproved);
+            await SendProcessedRequestInfoAsync(request.ContactEmail, manageRequestDto.isApproved);
         }
 
         public async Task<int> SubmitRequestAsync(PartnershipDto partnershipDto)
@@ -166,12 +166,12 @@ namespace Catering.Core.Services
             await repository.AddAsync(request);
             await repository.SaveChangesAsync();
 
-            await SendInitialRequestConfirmationEmail(request.ContactEmail);
+            await SendInitialRequestConfirmationEmailAsync(request.ContactEmail);
 
             return request.Id;
         }
 
-        private async Task SendProcessedRequestInfo(string email, bool isApproved)
+        private async Task SendProcessedRequestInfoAsync(string email, bool isApproved)
         {
             var builder = new StringBuilder();
 
@@ -200,7 +200,7 @@ namespace Catering.Core.Services
             await emailService.SendEmailAsync(message);
         }
 
-        private async Task SendInitialRequestConfirmationEmail(string email)
+        private async Task SendInitialRequestConfirmationEmailAsync(string email)
         {
             var builder = new StringBuilder();
 

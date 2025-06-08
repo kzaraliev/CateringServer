@@ -27,7 +27,7 @@ namespace Catering.Controllers
 
             try
             {
-                var result = await authService.Login(user);
+                var result = await authService.LoginAsync(user);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex)
@@ -50,7 +50,7 @@ namespace Catering.Controllers
 
             try
             {
-                var result = await authService.Register(user);
+                var result = await authService.RegisterAsync(user);
                 return StatusCode(201, new { Message = "User registered successfully" });
             }
             catch (InvalidOperationException ex)
@@ -73,7 +73,7 @@ namespace Catering.Controllers
 
             try
             {
-                await authService.ForgotPassword(user);
+                await authService.ForgotPasswordAsync(user);
                 return Ok(new { message = "If the email exists, a reset link has been sent" });
             }
             catch (Exception)
@@ -92,7 +92,7 @@ namespace Catering.Controllers
 
             try
             {
-                await authService.ResetPassword(user);
+                await authService.ResetPasswordAsync(user);
                 return Ok(new { message = "Password was successfully reset" });
             }
             catch (InvalidOperationException ex)
@@ -115,7 +115,7 @@ namespace Catering.Controllers
 
             try
             {
-                var result = await authService.RefreshToken(refreshTokenRequest);
+                var result = await authService.RefreshTokenAsync(refreshTokenRequest);
                 return Ok(result);
             }
             catch (SecurityTokenException ex)
@@ -149,7 +149,7 @@ namespace Catering.Controllers
 
             try
             {
-                await authService.Logout(logoutRequest, username);
+                await authService.LogoutAsync(logoutRequest, username);
                 return Ok(new { message = "Logout successful" });
             }
             catch (InvalidOperationException ex)
@@ -172,7 +172,7 @@ namespace Catering.Controllers
 
             try
             {
-                await authService.EmailConfirmation(confirmEmail.Email, confirmEmail.Token);
+                await authService.EmailConfirmationAsync(confirmEmail.Email, confirmEmail.Token);
                 return Ok(new { message = "Email was successfully confirmed" });
             }
             catch (UnauthorizedAccessException ex)

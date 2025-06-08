@@ -4,6 +4,6 @@ namespace Catering.Core.Contracts
 {
     public interface IRestaurantService
     {
-        Task<int> CreateRestaurant(CreateRestaurantRequestDto restaurantDto);
+        Task<int> CreateRestaurantAsync(CreateRestaurantRequestDto restaurantDto);
     }
 }
