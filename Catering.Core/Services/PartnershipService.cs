@@ -1,4 +1,5 @@
-﻿using Catering.Core.Contracts;
+﻿using Catering.Core.Constants;
+using Catering.Core.Contracts;
 using Catering.Core.DTOs.Partnership;
 using Catering.Core.DTOs.Restaurant;
 using Catering.Core.Models.Email;
@@ -127,6 +128,11 @@ namespace Catering.Core.Services
                 };
 
                 int restaurantId = await restaurantService.CreateRestaurantAsync(restaurantDto);
+
+                if(user != null)
+                {
+                    await userManager.AddToRoleAsync(user, RoleNames.RestaurantOwner);
+                }
 
                 request.Status = PartnershipRequestStatus.Approved;
                 request.RestaurantId = restaurantId;
