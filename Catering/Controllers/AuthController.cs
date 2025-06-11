@@ -3,7 +3,6 @@ using Catering.Core.Contracts;
 using Catering.Core.DTOs.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Catering.Controllers
 {
@@ -28,19 +27,8 @@ namespace Catering.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                var result = await authService.LoginAsync(user);
-                return Ok(result);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, $"An error occurred while processing your request");
-            }
+            var result = await authService.LoginAsync(user);
+            return Ok(result);
         }
 
         [HttpPost("register")]
@@ -52,19 +40,8 @@ namespace Catering.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                var result = await authService.RegisterAsync(user);
-                return StatusCode(201, new { Message = "User registered successfully" });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+            var result = await authService.RegisterAsync(user);
+            return StatusCode(201, new { Message = "User registered successfully" });
         }
 
         [HttpPost("forgot-password")]
@@ -76,15 +53,8 @@ namespace Catering.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                await authService.ForgotPasswordAsync(user);
-                return Ok(new { message = "If the email exists, a reset link has been sent" });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+            await authService.ForgotPasswordAsync(user);
+            return Ok(new { message = "If the email exists, a reset link has been sent" });
         }
 
         [HttpPost("reset-password")]
@@ -96,19 +66,8 @@ namespace Catering.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                await authService.ResetPasswordAsync(user);
-                return Ok(new { message = "Password was successfully reset" });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+            await authService.ResetPasswordAsync(user);
+            return Ok(new { message = "Password was successfully reset" });
         }
 
         [HttpPost("refresh-token")]
@@ -120,23 +79,8 @@ namespace Catering.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                var result = await authService.RefreshTokenAsync(refreshTokenRequest);
-                return Ok(result);
-            }
-            catch (SecurityTokenException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, new { message = "An unexpected error occurred." });
-            }
+            var result = await authService.RefreshTokenAsync(refreshTokenRequest);
+            return Ok(result);
         }
 
         [HttpPost("logout")]
@@ -153,19 +97,8 @@ namespace Catering.Controllers
                 return Unauthorized("Username not found in token");
             }
 
-            try
-            {
-                await authService.LogoutAsync(logoutRequest, username);
-                return Ok(new { message = "Logout successful" });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, new { message = "An unexpected error occurred"});
-            }
+            await authService.LogoutAsync(logoutRequest, username);
+            return Ok(new { message = "Logout successful" });
         }
 
         [HttpPost("email-confirmation")]
@@ -177,15 +110,8 @@ namespace Catering.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                await authService.EmailConfirmationAsync(confirmEmail.Email, confirmEmail.Token);
-                return Ok(new { message = "Email was successfully confirmed" });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
+            await authService.EmailConfirmationAsync(confirmEmail.Email, confirmEmail.Token);
+            return Ok(new { message = "Email was successfully confirmed" });
         }
     }
 }

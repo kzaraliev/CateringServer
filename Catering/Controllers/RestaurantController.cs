@@ -60,27 +60,8 @@ namespace Catering.Controllers
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            try
-            {
-                await restaurantService.UpdateRestaurantAsync(restaurantDto, userId);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, $"An error occurred while processing your request");
-            }
+            await restaurantService.UpdateRestaurantAsync(restaurantDto, userId);
+            return NoContent();
         }
 
         [HttpPost("menu-item")]
@@ -93,27 +74,8 @@ namespace Catering.Controllers
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            try
-            {
-                await menuService.CreateMenuItemAsync(menuItemDto, userId);
-                return StatusCode(201, new { Message = "Menu item created successfully" });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { ex.Message });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, $"An error occurred while processing your request");
-            }
+            await menuService.CreateMenuItemAsync(menuItemDto, userId);
+            return StatusCode(201, new { Message = "Menu item created successfully" });
         }
 
         [HttpPost("menu-category")]
@@ -126,23 +88,8 @@ namespace Catering.Controllers
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            try
-            {
-                await menuService.CreateMenuCategoryAsync(menuCategoryDto, userId);
-                return StatusCode(201, new { Message = "Menu category created successfully" });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, $"An error occurred while processing your request");
-            }
+            await menuService.CreateMenuCategoryAsync(menuCategoryDto, userId);
+            return StatusCode(201, new { Message = "Menu category created successfully" });
         }
     }
 }

@@ -3,7 +3,6 @@ using Catering.Core.Contracts;
 using Catering.Core.DTOs.Partnership;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace Catering.Controllers
 {
@@ -22,16 +21,8 @@ namespace Catering.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPartnershipRequests([FromQuery] PartnershipRequestQueryParametersDto queryParams)
         {
-            try
-            {
-                var requests = await partnershipService.GetAllPartnershipRequestsAsync(queryParams);
-                return Ok(requests);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, $"An error occurred while processing your request");
-            }
-            
+            var requests = await partnershipService.GetAllPartnershipRequestsAsync(queryParams);
+            return Ok(requests);
         }
 
 
@@ -43,23 +34,8 @@ namespace Catering.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                await partnershipService.ProcessRequestAsync(manageRequestDto);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, $"An error occurred while processing your request");
-            }
+            await partnershipService.ProcessRequestAsync(manageRequestDto);
+            return NoContent();
         }
 
 
@@ -72,19 +48,8 @@ namespace Catering.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                int requestId = await partnershipService.SubmitRequestAsync(partnershipDto);
-                return Ok(new { Message = "Request submitted successfully.", RequestId = requestId });
-            }
-            catch(ValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, $"An error occurred while processing your request");
-            }
+            int requestId = await partnershipService.SubmitRequestAsync(partnershipDto);
+            return Ok(new { Message = "Request submitted successfully.", RequestId = requestId });
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Catering.Core.Contracts;
 using Catering.Core.Services;
+using Catering.Filters;
 using Catering.Infrastructure.Common;
 using Catering.Infrastructure.Data;
 using Catering.Infrastructure.Data.Models;
@@ -28,6 +29,11 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.ValueLengthLimit = int.MaxValue;
                 options.MultipartBodyLengthLimit = int.MaxValue;
                 options.MemoryBufferThreshold = int.MaxValue;
+            });
+
+            services.AddControllers(options =>
+            {
+                options.Filters.Add(typeof(GlobalExceptionFilter));
             });
             return services;
         }

@@ -140,7 +140,7 @@ namespace Catering.Core.Services
             var username = principal.Identity?.Name;
             if (username == null)
             {
-                throw new SecurityTokenException("Invalid token");
+                throw new InvalidOperationException("The provided access token is malformed or invalid.");
             }
 
             var identityUser = await userManager.FindByNameAsync(username);
@@ -156,7 +156,7 @@ namespace Catering.Core.Services
 
             if (refreshToken == null || refreshToken.Expires < DateTime.UtcNow || refreshToken.Revoked != null)
             {
-                throw new SecurityTokenException("Invalid refresh token");
+                throw new ArgumentException("The provided refresh token is invalid, expired, or has been revoked.");
             }
 
             refreshToken.Revoked = DateTime.UtcNow;
