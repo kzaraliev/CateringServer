@@ -11,10 +11,12 @@ namespace Catering.Core.Services
     public class RestaurantService : IRestaurantService
     {
         private readonly IRepository repository;
+        private readonly IMenuService menuService;
 
-        public RestaurantService(IRepository _repository)
+        public RestaurantService(IRepository _repository, IMenuService _menuService)
         {
             repository = _repository;
+            menuService = _menuService;
         }
 
         public async Task<int> CreateRestaurantAsync(CreateRestaurantRequestDto restaurantDto)
@@ -32,23 +34,14 @@ namespace Catering.Core.Services
             await repository.AddAsync(restaurant);
             await repository.SaveChangesAsync();
 
+            await menuService.CreateDefaultMenuCategoryAsync(restaurant.Id);
+
             return restaurant.Id;
         }
 
         public async Task UpdateRestaurantAsync(UpdateRestaurantDto restaurantDto, string userId)
         {
-            var user = await repository.AllReadOnly<IdentityUser>()
-                .FirstOrDefaultAsync(u => u.Id == userId)
-                ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
-
-            var restaurant = await repository.All<Restaurant>()
-                .FirstOrDefaultAsync(r => r.Id == restaurantDto.Id)
-                ?? throw new KeyNotFoundException($"Restaurant with ID {restaurantDto.Id} not found.");
-
-            if (restaurant.OwnerId != user.Id)
-            {
-                throw new InvalidOperationException("You are not authorized to update this restaurant.");
-            }
+            var restaurant = await ValidateOwnership(userId, restaurantDto.Id);
 
             if (restaurantDto.WorkingDays != null)
             {
@@ -112,6 +105,24 @@ namespace Catering.Core.Services
                     throw new ArgumentException($"Working hours must be within 0-24 range for {day.Day}");
                 }
             }
+        }
+
+        private async Task<Restaurant> ValidateOwnership(string userId, int restaurantId)
+        {
+            var user = await repository.AllReadOnly<IdentityUser>()
+                .FirstOrDefaultAsync(u => u.Id == userId)
+                ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
+
+            var restaurant = await repository.All<Restaurant>()
+                .FirstOrDefaultAsync(r => r.Id == restaurantId)
+                ?? throw new KeyNotFoundException($"Restaurant with ID {restaurantId} not found.");
+
+            if (restaurant.OwnerId != user.Id)
+            {
+                throw new InvalidOperationException("You are not authorized to perform this action on the restaurant.");
+            }
+
+            return restaurant;
         }
     }
 }
