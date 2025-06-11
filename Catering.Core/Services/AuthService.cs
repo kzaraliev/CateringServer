@@ -90,7 +90,7 @@ namespace Catering.Core.Services
             List<string> roles = [RoleNames.User];
 
             List<Restaurant> restaurants = await repository
-                .All<Restaurant>()
+                .AllReadOnly<Restaurant>()
                 .Where(r => r.ContactEmail == user.Email && r.OwnerId == null)
                 .ToListAsync();
 
