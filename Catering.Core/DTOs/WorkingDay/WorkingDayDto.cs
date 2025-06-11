@@ -6,6 +6,7 @@ namespace Catering.Core.DTOs.WorkingDay
     public class WorkingDayDto
     {
         [Required(ErrorMessage = RequiredMessage)]
+        [EnumDataType(typeof(DayOfWeek))]
         public DayOfWeek Day { get; set; }
         public TimeSpan? OpenTime { get; set; }
         public TimeSpan? CloseTime { get; set; }
