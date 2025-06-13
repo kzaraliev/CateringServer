@@ -86,6 +86,20 @@ namespace Catering.Controllers
             return StatusCode(201, new { Message = "Menu item created successfully" });
         }
 
+        [HttpDelete("menu-item/{id}")]
+        public async Task<IActionResult> DeleteMenuItem(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid menu item ID.");
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            await menuService.DeleteMenuItemAsync(id, userId);
+            return NoContent();
+        }
+
         [HttpPost("menu-category")]
         public async Task<IActionResult> CreateMenuCategory(CreateMenuCategoryDto menuCategoryDto)
         {

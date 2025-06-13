@@ -38,6 +38,20 @@ namespace Catering.Core.Services
             await repository.SaveChangesAsync();
         }
 
+        public async Task DeleteMenuItemAsync(int menuItemId, string userId)
+        {
+            var menuItem = await repository.FindAsync<MenuItem>(menuItemId)
+                ?? throw new KeyNotFoundException($"MenuItem with ID {menuItemId} not found.");
+            var menuCategory = await repository.AllReadOnly<MenuCategory>()
+                .FirstOrDefaultAsync(mc => mc.Id == menuItem.MenuCategoryId)
+                ?? throw new KeyNotFoundException($"MenuCategory with ID {menuItem.MenuCategoryId} not found.");
+
+            await ValidateOwnership(userId, menuCategory.RestaurantId);
+
+            repository.Remove(menuItem);
+            await repository.SaveChangesAsync();
+        }
+
         public async Task CreateMenuCategoryAsync(CreateMenuCategoryDto menuCategoryDto, string userId)
         {
             await ValidateOwnership(userId, menuCategoryDto.RestaurantId);
@@ -77,7 +91,7 @@ namespace Catering.Core.Services
 
             if (restaurant.OwnerId != user.Id)
             {
-                throw new InvalidOperationException("You are not authorized to perform this action on the restaurant.");
+                throw new UnauthorizedAccessException("You are not authorized to perform this action on the restaurant.");
             }
         }
     }
