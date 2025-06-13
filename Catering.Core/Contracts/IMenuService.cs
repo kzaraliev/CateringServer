@@ -10,5 +10,6 @@ namespace Catering.Core.Contracts
         Task CreateDefaultMenuCategoryAsync(int restaurantId);
         Task DeleteMenuItemAsync(int menuItemId, string userId);
         Task DeleteMenuCategoryAsync(int menuCategoryId, string userId);
+        Task UpdateMenuItemAsync(int menuItemId, UpdateMenuItemDto menuItemDto, string userId);
     }
 }

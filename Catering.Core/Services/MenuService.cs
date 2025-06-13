@@ -3,7 +3,6 @@ using Catering.Core.DTOs.MenuCategory;
 using Catering.Core.DTOs.MenuItem;
 using Catering.Infrastructure.Common;
 using Catering.Infrastructure.Data.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Catering.Core.Services
@@ -35,6 +34,40 @@ namespace Catering.Core.Services
             };
 
             await repository.AddAsync(menuItem);
+            await repository.SaveChangesAsync();
+        }
+
+        public async Task UpdateMenuItemAsync(int menuItemId, UpdateMenuItemDto menuItemDto, string userId)
+        {
+            var menuItem = await repository.All<MenuItem>()
+                .Include(mi => mi.MenuCategory)
+                .FirstOrDefaultAsync(mi => mi.Id == menuItemId)
+                ?? throw new KeyNotFoundException($"MenuItem with ID {menuItemId} not found.");
+
+            var originalRestaurantId = menuItem.MenuCategory.RestaurantId;
+
+            await ValidateOwnership(userId, originalRestaurantId);
+
+            menuItem.Name = menuItemDto.Name ?? menuItem.Name;
+            menuItem.Description = menuItemDto.Description ?? menuItem.Description;
+            menuItem.Price = menuItemDto.Price ?? menuItem.Price;
+            menuItem.ImageUrl = menuItemDto.ImageUrl ?? menuItem.ImageUrl;
+
+            if (menuItemDto.MenuCategoryId.HasValue && menuItemDto.MenuCategoryId.Value != menuItem.MenuCategoryId)
+            {
+                int newMenuCategoryId = menuItemDto.MenuCategoryId.Value;
+
+                var targetMenuCategory = await repository.AllReadOnly<MenuCategory>()
+                    .FirstOrDefaultAsync(mc => mc.Id == newMenuCategoryId && mc.RestaurantId == originalRestaurantId);
+
+                if (targetMenuCategory == null)
+                {
+                    throw new KeyNotFoundException($"MenuCategory with ID {newMenuCategoryId} not found or does not belong to the current restaurant.");
+                }
+
+                menuItem.MenuCategoryId = newMenuCategoryId;
+            }
+
             await repository.SaveChangesAsync();
         }
 

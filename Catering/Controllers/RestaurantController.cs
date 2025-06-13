@@ -3,6 +3,7 @@ using Catering.Core.Contracts;
 using Catering.Core.DTOs.MenuCategory;
 using Catering.Core.DTOs.MenuItem;
 using Catering.Core.DTOs.Restaurant;
+using Catering.Infrastructure.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -84,6 +85,20 @@ namespace Catering.Controllers
 
             await menuService.CreateMenuItemAsync(menuItemDto, userId);
             return StatusCode(201, new { Message = "Menu item created successfully" });
+        }
+
+        [HttpPut("menu-items/{id}")]
+        public async Task<IActionResult> UpdateMenuItem(int id, UpdateMenuItemDto menuItemDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            await menuService.UpdateMenuItemAsync(id, menuItemDto, userId);
+            return NoContent();
         }
 
         [HttpDelete("menu-items/{id}")]
