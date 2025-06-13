@@ -11,15 +11,18 @@ namespace Catering.Core.DTOs.Restaurant
         [Required(ErrorMessage = RequiredMessage)]
         public int Id { get; set; }
 
+        [MinLength(1)]
         [MaxLength(NameMaxLength)]
         public string? Name { get; set; }
 
+        [MinLength(1)]
         [MaxLength(DescriptionMaxLength)]
         public string? Description { get; set; }
 
         [Phone]
         public string? PhoneNumber { get; set; }
 
+        [MinLength(1)]
         [MaxLength(AddressMaxLength)]
         public string? Address { get; set; }
 
