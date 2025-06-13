@@ -74,15 +74,15 @@ namespace Catering.Core.Services
         }
 
 
-        public async Task ProcessRequestAsync(ManagePartnershipDto manageRequestDto)
+        public async Task ProcessRequestAsync(int partnershipRequestId, ManagePartnershipDto manageRequestDto)
         {
             var request = await repository
                 .All<PartnershipRequest>()
-                .FirstOrDefaultAsync(p => p.Id == manageRequestDto.PartnershipRequestId);
+                .FirstOrDefaultAsync(p => p.Id == partnershipRequestId);
 
             if (request == null)
             {
-                throw new KeyNotFoundException($"Partnership request with Id {manageRequestDto.PartnershipRequestId} not found.");
+                throw new KeyNotFoundException($"Partnership request with Id {partnershipRequestId} not found.");
             }
 
             if (request.Status != PartnershipRequestStatus.Pending)

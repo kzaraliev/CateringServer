@@ -26,15 +26,15 @@ namespace Catering.Controllers
         }
 
 
-        [HttpPost("process-request")]
-        public async Task<IActionResult> ProcessRequest(ManagePartnershipDto manageRequestDto)
+        [HttpPost("{id}")]
+        public async Task<IActionResult> ProcessRequest(int id, ManagePartnershipDto manageRequestDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            await partnershipService.ProcessRequestAsync(manageRequestDto);
+            await partnershipService.ProcessRequestAsync(id, manageRequestDto);
             return NoContent();
         }
 
