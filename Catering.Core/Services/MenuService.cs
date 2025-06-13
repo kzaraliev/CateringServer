@@ -66,6 +66,24 @@ namespace Catering.Core.Services
             await repository.SaveChangesAsync();
         }
 
+        public async Task DeleteMenuCategoryAsync(int menuCategoryId, string userId)
+        {
+            var menuCategory = await repository.AllReadOnly<MenuCategory>()
+                .Include(mc => mc.MenuItems)
+                .FirstOrDefaultAsync(mc => mc.Id == menuCategoryId)
+                ?? throw new KeyNotFoundException($"MenuCategory with ID {menuCategoryId} not found.");
+
+            if (menuCategory.MenuItems.Any())
+            {
+                throw new InvalidOperationException("Cannot delete a menu category that contains menu items. Please remove the items first.");
+            }
+
+            await ValidateOwnership(userId, menuCategory.RestaurantId);
+
+            repository.Remove(menuCategory);
+            await repository.SaveChangesAsync();
+        }
+
         public async Task CreateDefaultMenuCategoryAsync(int restaurantId)
         {
 
@@ -81,15 +99,11 @@ namespace Catering.Core.Services
 
         private async Task ValidateOwnership(string userId, int restaurantId)
         {
-            var user = await repository.AllReadOnly<IdentityUser>()
-                .FirstOrDefaultAsync(u => u.Id == userId)
-                ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
-
             var restaurant = await repository.AllReadOnly<Restaurant>()
                 .FirstOrDefaultAsync(r => r.Id == restaurantId)
                 ?? throw new KeyNotFoundException($"Restaurant with ID {restaurantId} not found.");
 
-            if (restaurant.OwnerId != user.Id)
+            if (restaurant.OwnerId != userId)
             {
                 throw new UnauthorizedAccessException("You are not authorized to perform this action on the restaurant.");
             }
