@@ -1,4 +1,5 @@
 ﻿using Catering.Core.DTOs.Partnership;
+using Catering.Core.DTOs.Queries;
 
 namespace Catering.Core.Contracts
 {
@@ -6,6 +7,6 @@ namespace Catering.Core.Contracts
     {
         Task<int> SubmitRequestAsync(PartnershipDto dto);
         Task ProcessRequestAsync(ManagePartnershipDto manageRequestDto);
-        Task<PartnershipRequestListDto> GetAllPartnershipRequestsAsync(PartnershipRequestQueryParametersDto queryParams);
+        Task<PagedResult<PartnershipItemsDto>> GetAllPartnershipRequestsAsync(PartnershipRequestQueryParametersDto queryParams);
     }
 }

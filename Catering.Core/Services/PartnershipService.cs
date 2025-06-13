@@ -1,8 +1,10 @@
 ﻿using Catering.Core.Constants;
 using Catering.Core.Contracts;
 using Catering.Core.DTOs.Partnership;
+using Catering.Core.DTOs.Queries;
 using Catering.Core.DTOs.Restaurant;
 using Catering.Core.Models.Email;
+using Catering.Core.Utils;
 using Catering.Infrastructure.Common;
 using Catering.Infrastructure.Data.Enums;
 using Catering.Infrastructure.Data.Models;
@@ -28,7 +30,7 @@ namespace Catering.Core.Services
             emailService = _emailService;
         }
 
-        public async Task<PartnershipRequestListDto> GetAllPartnershipRequestsAsync(PartnershipRequestQueryParametersDto queryParams)
+        public async Task<PagedResult<PartnershipItemsDto>> GetAllPartnershipRequestsAsync(PartnershipRequestQueryParametersDto queryParams)
         {
             var query = repository.AllReadOnly<PartnershipRequest>();
 
@@ -50,29 +52,12 @@ namespace Catering.Core.Services
                     r.Address.ToLower().Contains(term));
             }
 
-            int totalCount = await query.CountAsync();
+            query = query.ApplySorting(queryParams.SortBy, queryParams.SortDescending);
 
-            // Sort
-            query = queryParams.SortBy switch
-            {
-                "ContactEmail" => queryParams.SortDescending ?
-                    query.OrderByDescending(r => r.ContactEmail) :
-                    query.OrderBy(r => r.ContactEmail),
-                "CreatedAt" => queryParams.SortDescending ?
-                    query.OrderByDescending(r => r.CreatedAt) :
-                    query.OrderBy(r => r.CreatedAt),
-                _ => queryParams.SortDescending ?
-                    query.OrderByDescending(r => r.Id) :
-                    query.OrderBy(r => r.Id)
-            };
-
-            // Pagination
-            query = query
-                .Skip((queryParams.Page - 1) * queryParams.PageSize)
-                .Take(queryParams.PageSize);
-
-            var items = await query
-                .Select(p => new PartnershipItemsDto
+            var response = await query.ToPagedResultAsync(
+                queryParams.Page,
+                queryParams.PageSize,
+                p => new PartnershipItemsDto
                 {
                     Id = p.Id,
                     RestaurantName = p.RestaurantName,
@@ -82,17 +67,8 @@ namespace Catering.Core.Services
                     CreatedAt = p.CreatedAt,
                     ProcessedAt = p.ProcessedAt,
                     RestaurantId = p.RestaurantId,
-                    Address = p.Address,
-                })
-                .ToListAsync();
-
-            var response = new PartnershipRequestListDto
-            {
-                TotalCount = totalCount,
-                PageNumber = queryParams.Page,
-                PageSize = queryParams.PageSize,
-                Items = items
-            };
+                    Address = p.Address
+                });
 
             return response;
         }
