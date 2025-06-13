@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace Catering.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Restaurants")]
     [ApiController]
     [Authorize(Roles = RoleNames.RestaurantOwner)]
     public class RestaurantController : ControllerBase
@@ -31,7 +31,7 @@ namespace Catering.Controllers
             return Ok(restaurants);
         }
 
-        [HttpPost("create-restaurant")]
+        [HttpPost]
         public async Task<IActionResult> CreateRestaurant(CreateRestaurantRequestDto restaurantDto)
         {
             if (!ModelState.IsValid)
@@ -58,7 +58,7 @@ namespace Catering.Controllers
             }
         }
 
-        [HttpPut("update-restaurant")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRestaurant(UpdateRestaurantDto restaurantDto)
         {
             if (!ModelState.IsValid)
@@ -72,7 +72,7 @@ namespace Catering.Controllers
             return NoContent();
         }
 
-        [HttpPost("menu-item")]
+        [HttpPost("menu-items")]
         public async Task<IActionResult> CreateMenuItem(CreateMenuItemDto menuItemDto)
         {
             if (!ModelState.IsValid)
@@ -86,7 +86,7 @@ namespace Catering.Controllers
             return StatusCode(201, new { Message = "Menu item created successfully" });
         }
 
-        [HttpDelete("menu-item/{id}")]
+        [HttpDelete("menu-items/{id}")]
         public async Task<IActionResult> DeleteMenuItem(int id)
         {
             if (id <= 0)
@@ -100,7 +100,7 @@ namespace Catering.Controllers
             return NoContent();
         }
 
-        [HttpPost("menu-category")]
+        [HttpPost("menu-categories")]
         public async Task<IActionResult> CreateMenuCategory(CreateMenuCategoryDto menuCategoryDto)
         {
             if (!ModelState.IsValid)
@@ -114,7 +114,7 @@ namespace Catering.Controllers
             return StatusCode(201, new { Message = "Menu category created successfully" });
         }
 
-        [HttpDelete("menu-category/{id}")]
+        [HttpDelete("menu-categories/{id}")]
         public async Task<IActionResult> DeleteMenuCategory(int id)
         {
             if (id <= 0)
