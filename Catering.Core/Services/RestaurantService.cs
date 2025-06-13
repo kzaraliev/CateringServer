@@ -1,6 +1,8 @@
 ﻿using Catering.Core.Contracts;
+using Catering.Core.DTOs.Queries;
 using Catering.Core.DTOs.Restaurant;
 using Catering.Core.DTOs.WorkingDay;
+using Catering.Core.Utils;
 using Catering.Infrastructure.Common;
 using Catering.Infrastructure.Data.Models;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +19,63 @@ namespace Catering.Core.Services
         {
             repository = _repository;
             menuService = _menuService;
+        }
+
+        public async Task<PagedResult<RestaurantsDto>> GetAllRestaurantsAsync(RestaurantQueryParametersDto queryParams)
+        {
+            var query = repository.AllReadOnly<Restaurant>();
+            query = query.Where(r => r.IsPublic);
+            query = query.Include(r => r.MenuCategories).ThenInclude(c => c.MenuItems);
+
+            //IsOpen filter
+            if (queryParams.IsOpen.HasValue && queryParams.IsOpen.Value)
+            {
+                var currentDay = DateTime.Now.DayOfWeek;
+                var currentTime = DateTime.Now.TimeOfDay;
+
+                query = query.Where(r => r.WorkingDays.Any(wd =>
+                    wd.Day == currentDay &&
+                    !wd.IsClosed &&
+                    wd.OpenTime.HasValue && wd.CloseTime.HasValue &&
+                    currentTime >= wd.OpenTime.Value &&
+                    currentTime <= wd.CloseTime.Value));
+            }
+
+            //Delivery method filter
+            if (queryParams.DeliveryMethods.HasValue)
+            {
+                query = query.Where(r => (r.SupportedDeliveryMethods & queryParams.DeliveryMethods.Value) != 0);
+            }
+
+            //Search
+            if (!string.IsNullOrEmpty(queryParams.SearchTerm))
+            {
+                string term = queryParams.SearchTerm.Trim().ToLower();
+
+                query = query.Where(r =>
+                    r.Description != null && r.Description.ToLower().Contains(term) ||
+                    r.Address.ToLower().Contains(term) ||
+                    r.Name.ToLower().Contains(term) ||
+                    r.MenuCategories.Any(c =>
+                        c.Name.ToLower().Contains(term) ||
+                        c.MenuItems.Any(i => i.Name.ToLower().Contains(term))
+                    )
+                );
+            }
+
+            query = query.ApplySorting(queryParams.SortBy, queryParams.SortDescending);
+
+            var response = await query.ToPagedResultAsync(
+                queryParams.Page,
+                queryParams.PageSize,
+                r => new RestaurantsDto
+                {
+                    Id = r.Id,
+                    Name = r.Name,
+                    ImageUrl = r.ImageUrl,
+                });
+
+            return response;
         }
 
         public async Task<int> CreateRestaurantAsync(CreateRestaurantRequestDto restaurantDto)

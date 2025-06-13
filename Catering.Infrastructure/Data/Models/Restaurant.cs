@@ -97,7 +97,7 @@ namespace Catering.Infrastructure.Data.Models
         /// Gets or sets the collection of menu categories offered by the restaurant.
         /// </summary>
         [Comment("Collection of menu categories offered by the restaurant.")]
-        public ICollection<MenuCategory> Categories { get; set; } = new List<MenuCategory>();
+        public ICollection<MenuCategory> MenuCategories { get; set; } = new List<MenuCategory>();
 
         /// <summary>
         /// Gets or sets the collection of reviews for the restaurant.

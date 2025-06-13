@@ -23,6 +23,14 @@ namespace Catering.Controllers
             menuService = _menuService;
         }
 
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetRestaurants([FromQuery] RestaurantQueryParametersDto queryParams)
+        {
+            var restaurants = await restaurantService.GetAllRestaurantsAsync(queryParams);
+            return Ok(restaurants);
+        }
+
         [HttpPost("create-restaurant")]
         public async Task<IActionResult> CreateRestaurant(CreateRestaurantRequestDto restaurantDto)
         {
