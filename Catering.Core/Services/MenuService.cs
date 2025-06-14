@@ -1,6 +1,8 @@
 ﻿using Catering.Core.Contracts;
 using Catering.Core.DTOs.MenuCategory;
 using Catering.Core.DTOs.MenuItem;
+using Catering.Core.DTOs.Queries;
+using Catering.Core.Utils;
 using Catering.Infrastructure.Common;
 using Catering.Infrastructure.Data.Models;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +16,42 @@ namespace Catering.Core.Services
         public MenuService(IRepository _repository)
         {
             repository = _repository;
+        }
+
+        public async Task<PagedResult<MenuItemsDto>> GetAllMenuItemsForRestaurantAsync(int restaurantId, MenuItemQueryParametersDto queryParams)
+        {
+            var query = repository.AllReadOnly<MenuItem>();
+
+            query = query.Where(mi => mi.MenuCategory.RestaurantId == restaurantId);
+
+            //Search
+            if (!string.IsNullOrEmpty(queryParams.SearchTerm))
+            {
+                string term = queryParams.SearchTerm.Trim().ToLower();
+
+                query = query.Where(mi =>
+                    mi.Description != null && mi.Description.ToLower().Contains(term) ||
+                    mi.Name.ToLower().Contains(term) ||
+                    mi.MenuCategory.Name.ToLower().Contains(term)
+                    );
+            }
+
+            query = query.ApplySorting(queryParams.SortBy, queryParams.SortDescending);
+
+            var response = await query.ToPagedResultAsync(
+                queryParams.Page,
+                queryParams.PageSize,
+                mi => new MenuItemsDto
+                {
+                    Id = mi.Id,
+                    Name = mi.Name,
+                    Description = mi.Description,
+                    ImageUrl = mi.ImageUrl,
+                    MenuCategoryId = mi.MenuCategoryId,
+                    Price = mi.Price,
+                });
+
+            return response;
         }
 
         public async Task CreateMenuItemAsync(CreateMenuItemDto menuItemDto, string userId)

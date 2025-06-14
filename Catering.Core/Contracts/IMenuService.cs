@@ -1,5 +1,6 @@
 ﻿using Catering.Core.DTOs.MenuCategory;
 using Catering.Core.DTOs.MenuItem;
+using Catering.Core.DTOs.Queries;
 
 namespace Catering.Core.Contracts
 {
@@ -12,5 +13,6 @@ namespace Catering.Core.Contracts
         Task DeleteMenuCategoryAsync(int menuCategoryId, string userId);
         Task UpdateMenuItemAsync(int menuItemId, UpdateMenuItemDto menuItemDto, string userId);
         Task UpdateMenuCategoryAsync(int menuCategoryId, UpdateMenuCategoryDto menuCategoryDto, string userId);
+        Task<PagedResult<MenuItemsDto>> GetAllMenuItemsForRestaurantAsync(int restaurantId, MenuItemQueryParametersDto queryParams);
     }
 }
