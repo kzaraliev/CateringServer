@@ -28,12 +28,12 @@ namespace Catering.Core.Services
             //Search
             if (!string.IsNullOrEmpty(queryParams.SearchTerm))
             {
-                string term = queryParams.SearchTerm.Trim();
+                string term = queryParams.SearchTerm.Trim().ToLower();
 
                 query = query.Where(mi =>
-                   (mi.Description != null && mi.Description.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
-                   mi.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                   mi.MenuCategory.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    (mi.Description != null && mi.Description.ToLower().Contains(term)) || 
+                    mi.Name.ToLower().Contains(term) ||                                  
+                    mi.MenuCategory.Name.ToLower().Contains(term)                        
                 );
             }
 
