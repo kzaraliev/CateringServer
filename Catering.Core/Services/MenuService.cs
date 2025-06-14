@@ -99,6 +99,20 @@ namespace Catering.Core.Services
             await repository.SaveChangesAsync();
         }
 
+        public async Task UpdateMenuCategoryAsync(int menuCategoryId, UpdateMenuCategoryDto menuCategoryDto, string userId)
+        {
+            var menuCategory = await repository.All<MenuCategory>()
+                .FirstOrDefaultAsync(mc => mc.Id == menuCategoryId)
+                ?? throw new KeyNotFoundException($"MenuCategory with ID {menuCategoryId} not found.");
+
+            await ValidateOwnership(userId, menuCategory.RestaurantId);
+
+            menuCategory.Name = menuCategoryDto.Name ?? menuCategory.Name;
+            menuCategory.Description = menuCategoryDto.Description ?? menuCategory.Description;
+
+            await repository.SaveChangesAsync();
+        }
+
         public async Task DeleteMenuCategoryAsync(int menuCategoryId, string userId)
         {
             var menuCategory = await repository.AllReadOnly<MenuCategory>()
