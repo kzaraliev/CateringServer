@@ -14,5 +14,6 @@ namespace Catering.Core.Contracts
         Task UpdateMenuItemAsync(int restaurantId, int menuItemId, UpdateMenuItemDto menuItemDto, string userId);
         Task UpdateMenuCategoryAsync(int restaurantId, int menuCategoryId, UpdateMenuCategoryDto menuCategoryDto, string userId);
         Task<PagedResult<MenuItemsDto>> GetAllMenuItemsForRestaurantAsync(int restaurantId, MenuItemQueryParametersDto queryParams);
+        Task<PagedResult<MenuCategoriesDto>> GetAllMenuCategoriesForRestaurantAsync(int restaurantId, MenuCategoryQueryParametersDto queryParams);
     }
 }

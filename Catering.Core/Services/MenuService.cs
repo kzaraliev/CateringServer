@@ -121,6 +121,41 @@ namespace Catering.Core.Services
             await repository.SaveChangesAsync();
         }
 
+        public async Task<PagedResult<MenuCategoriesDto>> GetAllMenuCategoriesForRestaurantAsync(int restaurantId, MenuCategoryQueryParametersDto queryParams)
+        {
+            IQueryable<MenuCategory> query = repository.AllReadOnly<MenuCategory>()
+                .Include(mc => mc.MenuItems);
+
+            query = query.Where(mi => mi.RestaurantId == restaurantId);
+
+            //Search
+            if (!string.IsNullOrEmpty(queryParams.SearchTerm))
+            {
+                string term = queryParams.SearchTerm.Trim().ToLower();
+
+                query = query.Where(mc =>
+                    (mc.Description != null && mc.Description.ToLower().Contains(term)) ||
+                    mc.Name.ToLower().Contains(term)
+                );
+            }
+
+            query = query.ApplySorting(queryParams.SortBy, queryParams.SortDescending);
+
+            var response = await query.ToPagedResultAsync(
+                queryParams.Page,
+                queryParams.PageSize,
+                mc => new MenuCategoriesDto
+                {
+                    Id = mc.Id,
+                    Name = mc.Name,
+                    Description = mc.Description,
+                    RestaurantId = mc.RestaurantId,
+                    MenuItemsCount = mc.MenuItems.Count()
+                });
+
+            return response;
+        }
+
         public async Task CreateMenuCategoryAsync(int restaurantId, CreateMenuCategoryDto menuCategoryDto, string userId)
         {
             await ValidateOwnership(userId, restaurantId);

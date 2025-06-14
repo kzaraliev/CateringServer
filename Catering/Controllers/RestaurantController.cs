@@ -122,6 +122,14 @@ namespace Catering.Controllers
             return NoContent();
         }
 
+        [HttpGet("{restaurantId}/menu/categories")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetMenuCategories(int restaurantId, [FromQuery] MenuCategoryQueryParametersDto queryParams)
+        {
+            var menuCategories = await menuService.GetAllMenuCategoriesForRestaurantAsync(restaurantId, queryParams);
+            return Ok(menuCategories);
+        }
+
         [HttpPost("{restaurantId}/menu/categories")]
         public async Task<IActionResult> CreateMenuCategory(int restaurantId, CreateMenuCategoryDto menuCategoryDto)
         {
