@@ -6,7 +6,7 @@ namespace Catering.Core.Contracts
     public interface IRestaurantService
     {
         Task<int> CreateRestaurantAsync(CreateRestaurantRequestDto restaurantDto);
-        Task UpdateRestaurantAsync(UpdateRestaurantDto restaurantDto, string userId);
+        Task UpdateRestaurantAsync(int restaurantId, UpdateRestaurantDto restaurantDto, string userId);
         Task<PagedResult<RestaurantsDto>> GetAllRestaurantsAsync(RestaurantQueryParametersDto queryParams);
     }
 }

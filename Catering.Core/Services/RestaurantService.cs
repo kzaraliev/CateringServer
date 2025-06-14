@@ -5,7 +5,6 @@ using Catering.Core.DTOs.WorkingDay;
 using Catering.Core.Utils;
 using Catering.Infrastructure.Common;
 using Catering.Infrastructure.Data.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Catering.Core.Services
@@ -98,9 +97,9 @@ namespace Catering.Core.Services
             return restaurant.Id;
         }
 
-        public async Task UpdateRestaurantAsync(UpdateRestaurantDto restaurantDto, string userId)
+        public async Task UpdateRestaurantAsync(int restaurantId, UpdateRestaurantDto restaurantDto, string userId)
         {
-            var restaurant = await ValidateOwnership(userId, restaurantDto.Id);
+            var restaurant = await ValidateOwnership(userId, restaurantId);
 
             if (restaurantDto.WorkingDays != null)
             {
@@ -119,26 +118,29 @@ namespace Catering.Core.Services
                 restaurant.SupportedDeliveryMethods = restaurantDto.DeliveryMethod.Value;
             }
 
-            var existingWorkingDays = await repository
-                .All<WorkingDay>()
-                .Where(wd => wd.RestaurantId == restaurant.Id)
-                .ToListAsync();
-
-            if (existingWorkingDays.Any())
+            if (restaurantDto.WorkingDays != null)
             {
-                repository.RemoveRange(existingWorkingDays);
+                var existingWorkingDays = await repository
+                    .All<WorkingDay>()
+                    .Where(wd => wd.RestaurantId == restaurant.Id)
+                    .ToListAsync();
+
+                if (existingWorkingDays.Any())
+                {
+                    repository.RemoveRange(existingWorkingDays);
+                }
+
+                var newWorkingDays = (restaurantDto.WorkingDays).Select(dayDto => new WorkingDay
+                {
+                    Day = dayDto.Day,
+                    OpenTime = dayDto.IsClosed ? null : dayDto.OpenTime,
+                    CloseTime = dayDto.IsClosed ? null : dayDto.CloseTime,
+                    IsClosed = dayDto.IsClosed,
+                    RestaurantId = restaurant.Id
+                }).ToList();
+
+                await repository.AddRangeAsync(newWorkingDays);
             }
-
-            var newWorkingDays = (restaurantDto.WorkingDays ?? Enumerable.Empty<WorkingDayDto>()).Select(dayDto => new WorkingDay
-            {
-                Day = dayDto.Day,
-                OpenTime = dayDto.IsClosed ? null : dayDto.OpenTime,
-                CloseTime = dayDto.IsClosed ? null : dayDto.CloseTime,
-                IsClosed = dayDto.IsClosed,
-                RestaurantId = restaurantDto.Id
-            }).ToList();
-
-            await repository.AddRangeAsync(newWorkingDays);
 
             await repository.SaveChangesAsync();
         }
@@ -168,17 +170,13 @@ namespace Catering.Core.Services
 
         private async Task<Restaurant> ValidateOwnership(string userId, int restaurantId)
         {
-            var user = await repository.AllReadOnly<IdentityUser>()
-                .FirstOrDefaultAsync(u => u.Id == userId)
-                ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
-
             var restaurant = await repository.All<Restaurant>()
                 .FirstOrDefaultAsync(r => r.Id == restaurantId)
                 ?? throw new KeyNotFoundException($"Restaurant with ID {restaurantId} not found.");
 
-            if (restaurant.OwnerId != user.Id)
+            if (restaurant.OwnerId != userId)
             {
-                throw new InvalidOperationException("You are not authorized to perform this action on the restaurant.");
+                throw new UnauthorizedAccessException("You are not authorized to perform this action on the restaurant.");
             }
 
             return restaurant;

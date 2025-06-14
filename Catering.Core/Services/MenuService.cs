@@ -20,20 +20,21 @@ namespace Catering.Core.Services
 
         public async Task<PagedResult<MenuItemsDto>> GetAllMenuItemsForRestaurantAsync(int restaurantId, MenuItemQueryParametersDto queryParams)
         {
-            var query = repository.AllReadOnly<MenuItem>();
+            IQueryable<MenuItem> query = repository.AllReadOnly<MenuItem>()
+                .Include(mi => mi.MenuCategory);
 
             query = query.Where(mi => mi.MenuCategory.RestaurantId == restaurantId);
 
             //Search
             if (!string.IsNullOrEmpty(queryParams.SearchTerm))
             {
-                string term = queryParams.SearchTerm.Trim().ToLower();
+                string term = queryParams.SearchTerm.Trim();
 
                 query = query.Where(mi =>
-                    mi.Description != null && mi.Description.ToLower().Contains(term) ||
-                    mi.Name.ToLower().Contains(term) ||
-                    mi.MenuCategory.Name.ToLower().Contains(term)
-                    );
+                   (mi.Description != null && mi.Description.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                   mi.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                   mi.MenuCategory.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+                );
             }
 
             query = query.ApplySorting(queryParams.SortBy, queryParams.SortDescending);
@@ -54,13 +55,13 @@ namespace Catering.Core.Services
             return response;
         }
 
-        public async Task CreateMenuItemAsync(CreateMenuItemDto menuItemDto, string userId)
+        public async Task CreateMenuItemAsync(int restaurantId, CreateMenuItemDto menuItemDto, string userId)
         {
-            await ValidateOwnership(userId, menuItemDto.RestaurantId);
+            await ValidateOwnership(userId, restaurantId);
 
             var menuCategory = await repository.AllReadOnly<MenuCategory>()
-                .FirstOrDefaultAsync(mc => mc.Id == menuItemDto.MenuCategoryId && mc.RestaurantId == menuItemDto.RestaurantId)
-                ?? throw new KeyNotFoundException($"MenuCategory with ID {menuItemDto.MenuCategoryId} not found for Restaurant ID {menuItemDto.RestaurantId}.");
+                .FirstOrDefaultAsync(mc => mc.Id == menuItemDto.MenuCategoryId && mc.RestaurantId == restaurantId)
+                ?? throw new KeyNotFoundException($"MenuCategory with ID {menuItemDto.MenuCategoryId} not found or does not belong to Restaurant ID {restaurantId}.");
 
             var menuItem = new MenuItem
             {
@@ -75,16 +76,14 @@ namespace Catering.Core.Services
             await repository.SaveChangesAsync();
         }
 
-        public async Task UpdateMenuItemAsync(int menuItemId, UpdateMenuItemDto menuItemDto, string userId)
+        public async Task UpdateMenuItemAsync(int restaurantId, int menuItemId, UpdateMenuItemDto menuItemDto, string userId)
         {
+            await ValidateOwnership(userId, restaurantId);
+
             var menuItem = await repository.All<MenuItem>()
                 .Include(mi => mi.MenuCategory)
-                .FirstOrDefaultAsync(mi => mi.Id == menuItemId)
-                ?? throw new KeyNotFoundException($"MenuItem with ID {menuItemId} not found.");
-
-            var originalRestaurantId = menuItem.MenuCategory.RestaurantId;
-
-            await ValidateOwnership(userId, originalRestaurantId);
+                .FirstOrDefaultAsync(mi => mi.Id == menuItemId && mi.MenuCategory.RestaurantId == restaurantId)
+                ?? throw new KeyNotFoundException($"MenuItem with ID {menuItemId} not found for Restaurant ID {restaurantId}.");
 
             menuItem.Name = menuItemDto.Name ?? menuItem.Name;
             menuItem.Description = menuItemDto.Description ?? menuItem.Description;
@@ -96,7 +95,7 @@ namespace Catering.Core.Services
                 int newMenuCategoryId = menuItemDto.MenuCategoryId.Value;
 
                 var targetMenuCategory = await repository.AllReadOnly<MenuCategory>()
-                    .FirstOrDefaultAsync(mc => mc.Id == newMenuCategoryId && mc.RestaurantId == originalRestaurantId);
+                    .FirstOrDefaultAsync(mc => mc.Id == newMenuCategoryId && mc.RestaurantId == restaurantId);
 
                 if (targetMenuCategory == null)
                 {
@@ -109,41 +108,40 @@ namespace Catering.Core.Services
             await repository.SaveChangesAsync();
         }
 
-        public async Task DeleteMenuItemAsync(int menuItemId, string userId)
+        public async Task DeleteMenuItemAsync(int restaurantId, int menuItemId, string userId)
         {
-            var menuItem = await repository.FindAsync<MenuItem>(menuItemId)
-                ?? throw new KeyNotFoundException($"MenuItem with ID {menuItemId} not found.");
-            var menuCategory = await repository.AllReadOnly<MenuCategory>()
-                .FirstOrDefaultAsync(mc => mc.Id == menuItem.MenuCategoryId)
-                ?? throw new KeyNotFoundException($"MenuCategory with ID {menuItem.MenuCategoryId} not found.");
+            await ValidateOwnership(userId, restaurantId);
 
-            await ValidateOwnership(userId, menuCategory.RestaurantId);
+            var menuItem = await repository.All<MenuItem>()
+                .Include(mi => mi.MenuCategory)
+                .FirstOrDefaultAsync(mi => mi.Id == menuItemId && mi.MenuCategory.RestaurantId == restaurantId)
+                ?? throw new KeyNotFoundException($"MenuItem with ID {menuItemId} not found for Restaurant ID {restaurantId}.");
 
             repository.Remove(menuItem);
             await repository.SaveChangesAsync();
         }
 
-        public async Task CreateMenuCategoryAsync(CreateMenuCategoryDto menuCategoryDto, string userId)
+        public async Task CreateMenuCategoryAsync(int restaurantId, CreateMenuCategoryDto menuCategoryDto, string userId)
         {
-            await ValidateOwnership(userId, menuCategoryDto.RestaurantId);
+            await ValidateOwnership(userId, restaurantId);
 
             var menuCategory = new MenuCategory
             {
                 Name = menuCategoryDto.Name,
                 Description = menuCategoryDto.Description,
-                RestaurantId = menuCategoryDto.RestaurantId
+                RestaurantId = restaurantId
             };
             await repository.AddAsync(menuCategory);
             await repository.SaveChangesAsync();
         }
 
-        public async Task UpdateMenuCategoryAsync(int menuCategoryId, UpdateMenuCategoryDto menuCategoryDto, string userId)
+        public async Task UpdateMenuCategoryAsync(int restaurantId, int menuCategoryId, UpdateMenuCategoryDto menuCategoryDto, string userId)
         {
-            var menuCategory = await repository.All<MenuCategory>()
-                .FirstOrDefaultAsync(mc => mc.Id == menuCategoryId)
-                ?? throw new KeyNotFoundException($"MenuCategory with ID {menuCategoryId} not found.");
+            await ValidateOwnership(userId, restaurantId);
 
-            await ValidateOwnership(userId, menuCategory.RestaurantId);
+            var menuCategory = await repository.All<MenuCategory>()
+                 .FirstOrDefaultAsync(mc => mc.Id == menuCategoryId && mc.RestaurantId == restaurantId)
+                 ?? throw new KeyNotFoundException($"MenuCategory with ID {menuCategoryId} not found for Restaurant ID {restaurantId}.");
 
             menuCategory.Name = menuCategoryDto.Name ?? menuCategory.Name;
             menuCategory.Description = menuCategoryDto.Description ?? menuCategory.Description;
@@ -151,19 +149,19 @@ namespace Catering.Core.Services
             await repository.SaveChangesAsync();
         }
 
-        public async Task DeleteMenuCategoryAsync(int menuCategoryId, string userId)
+        public async Task DeleteMenuCategoryAsync(int restaurantId, int menuCategoryId, string userId)
         {
-            var menuCategory = await repository.AllReadOnly<MenuCategory>()
+            await ValidateOwnership(userId, restaurantId);
+
+            var menuCategory = await repository.All<MenuCategory>()
                 .Include(mc => mc.MenuItems)
-                .FirstOrDefaultAsync(mc => mc.Id == menuCategoryId)
-                ?? throw new KeyNotFoundException($"MenuCategory with ID {menuCategoryId} not found.");
+                .FirstOrDefaultAsync(mc => mc.Id == menuCategoryId && mc.RestaurantId == restaurantId)
+                ?? throw new KeyNotFoundException($"MenuCategory with ID {menuCategoryId} not found for Restaurant ID {restaurantId}.");
 
             if (menuCategory.MenuItems.Any())
             {
                 throw new InvalidOperationException("Cannot delete a menu category that contains menu items. Please remove the items first.");
             }
-
-            await ValidateOwnership(userId, menuCategory.RestaurantId);
 
             repository.Remove(menuCategory);
             await repository.SaveChangesAsync();

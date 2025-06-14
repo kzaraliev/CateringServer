@@ -1,16 +1,12 @@
 ﻿using Catering.Core.DTOs.WorkingDay;
 using Catering.Infrastructure.Data.Enums;
 using System.ComponentModel.DataAnnotations;
-using static Catering.Core.Constants.ErrorMessageConstants;
 using static Catering.Infrastructure.Constants.RestaurantConstants;
 
 namespace Catering.Core.DTOs.Restaurant
 {
     public class UpdateRestaurantDto
     {
-        [Required(ErrorMessage = RequiredMessage)]
-        public int Id { get; set; }
-
         [MinLength(1)]
         [MaxLength(NameMaxLength)]
         public string? Name { get; set; }

@@ -1,5 +1,7 @@
 ﻿using Catering.Core.Constants;
 using Catering.Core.Contracts;
+using Catering.Core.DTOs.MenuCategory;
+using Catering.Core.DTOs.MenuItem;
 using Catering.Core.DTOs.Restaurant;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +15,12 @@ namespace Catering.Controllers
     public class RestaurantController : ControllerBase
     {
         private readonly IRestaurantService restaurantService;
+        private readonly IMenuService menuService;
 
-        public RestaurantController(IRestaurantService _restaurantService)
+        public RestaurantController(IRestaurantService _restaurantService, IMenuService _menuService)
         {
             restaurantService = _restaurantService;
+            menuService = _menuService;
         }
 
         [HttpGet]
@@ -55,7 +59,7 @@ namespace Catering.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateRestaurant(UpdateRestaurantDto restaurantDto)
+        public async Task<IActionResult> UpdateRestaurant(int id, UpdateRestaurantDto restaurantDto)
         {
             if (!ModelState.IsValid)
             {
@@ -64,7 +68,99 @@ namespace Catering.Controllers
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            await restaurantService.UpdateRestaurantAsync(restaurantDto, userId);
+            await restaurantService.UpdateRestaurantAsync(id, restaurantDto, userId);
+            return NoContent();
+        }
+
+        [HttpGet("{restaurantId}/menu/items")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetMenuItems(int restaurantId, [FromQuery] MenuItemQueryParametersDto queryParams)
+        {
+            var menuItems = await menuService.GetAllMenuItemsForRestaurantAsync(restaurantId, queryParams);
+            return Ok(menuItems);
+        }
+
+        [HttpPost("{restaurantId}/menu/items")]
+        public async Task<IActionResult> CreateMenuItem(int restaurantId, CreateMenuItemDto menuItemDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            await menuService.CreateMenuItemAsync(restaurantId, menuItemDto, userId);
+            return StatusCode(201, new { Message = "Menu item created successfully" });
+        }
+
+        [HttpPut("{restaurantId}/menu/items/{id}")]
+        public async Task<IActionResult> UpdateMenuItem(int restaurantId, int id, UpdateMenuItemDto menuItemDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            await menuService.UpdateMenuItemAsync(restaurantId, id, menuItemDto, userId);
+            return NoContent();
+        }
+
+        [HttpDelete("{restaurantId}/menu/items/{id}")]
+        public async Task<IActionResult> DeleteMenuItem(int restaurantId, int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid menu item ID.");
+            }
+
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            await menuService.DeleteMenuItemAsync(restaurantId, id, userId);
+            return NoContent();
+        }
+
+        [HttpPost("{restaurantId}/menu/categories")]
+        public async Task<IActionResult> CreateMenuCategory(int restaurantId, CreateMenuCategoryDto menuCategoryDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            await menuService.CreateMenuCategoryAsync(restaurantId, menuCategoryDto, userId);
+            return StatusCode(201, new { Message = "Menu category created successfully" });
+        }
+
+        [HttpPut("{restaurantId}/menu/categories/{id}")]
+        public async Task<IActionResult> UpdateMenuCategory(int restaurantId, int id, UpdateMenuCategoryDto menuCategoryDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            await menuService.UpdateMenuCategoryAsync(restaurantId, id, menuCategoryDto, userId);
+            return NoContent();
+        }
+
+        [HttpDelete("{restaurantId}/menu/categories/{id}")]
+        public async Task<IActionResult> DeleteMenuCategory(int restaurantId, int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid menu category ID.");
+            }
+
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            await menuService.DeleteMenuCategoryAsync(restaurantId, id, userId);
             return NoContent();
         }
     }

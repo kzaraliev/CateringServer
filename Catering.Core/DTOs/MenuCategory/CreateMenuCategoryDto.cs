@@ -6,9 +6,6 @@ namespace Catering.Core.DTOs.MenuCategory
     public class CreateMenuCategoryDto
     {
         [Required]
-        public int RestaurantId { get; set; }
-
-        [Required]
         [MaxLength(NameMaxLength)]
         public required string Name { get; set; }
 
