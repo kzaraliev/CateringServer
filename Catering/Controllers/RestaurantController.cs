@@ -31,33 +31,6 @@ namespace Catering.Controllers
             return Ok(restaurants);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateRestaurant(CreateRestaurantRequestDto restaurantDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            try
-            {
-                var result = await restaurantService.CreateRestaurantAsync(restaurantDto);
-                return StatusCode(201, new { Message = "Restaurant created successfully", RestaurantId = result });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, $"An error occurred while processing your request");
-            }
-        }
-
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRestaurant(int id, UpdateRestaurantDto restaurantDto)
         {
@@ -111,11 +84,6 @@ namespace Catering.Controllers
         [HttpDelete("{restaurantId}/menu/items/{id}")]
         public async Task<IActionResult> DeleteMenuItem(int restaurantId, int id)
         {
-            if (id <= 0)
-            {
-                return BadRequest("Invalid menu item ID.");
-            }
-
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
             await menuService.DeleteMenuItemAsync(restaurantId, id, userId);
@@ -161,11 +129,6 @@ namespace Catering.Controllers
         [HttpDelete("{restaurantId}/menu/categories/{id}")]
         public async Task<IActionResult> DeleteMenuCategory(int restaurantId, int id)
         {
-            if (id <= 0)
-            {
-                return BadRequest("Invalid menu category ID.");
-            }
-
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
             await menuService.DeleteMenuCategoryAsync(restaurantId, id, userId);
