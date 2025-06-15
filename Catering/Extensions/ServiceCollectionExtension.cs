@@ -23,6 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddScoped<IRestaurantService, RestaurantService>();
             services.AddScoped<IPartnershipService, PartnershipService>();
             services.AddScoped<IMenuService, MenuService>();
+            services.AddScoped<ICartService, CartService>();
 
             services.Configure<FormOptions>(options =>
             {
