@@ -53,6 +53,15 @@ namespace Catering.Controllers
             return Ok(menuItems);
         }
 
+        [HttpGet("{restaurantId}/menu/items/{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetMenuItem(int restaurantId, int id)
+        {
+            var menuItem = await menuService.GetMenuItemAsync(restaurantId, id);
+
+            return Ok(menuItem);
+        }
+
         [HttpPost("{restaurantId}/menu/items")]
         public async Task<IActionResult> CreateMenuItem(int restaurantId, CreateMenuItemDto menuItemDto)
         {

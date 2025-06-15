@@ -18,6 +18,45 @@ namespace Catering.Core.Services
             repository = _repository;
         }
 
+        public async Task<MenuItemDto> GetMenuItemAsync(int restaurantId, int menuItemId)
+        {
+            var menuItem = await repository.AllReadOnly<MenuItem>()
+                .Include(mi => mi.MenuCategory)
+                .FirstOrDefaultAsync(mi => mi.Id == menuItemId && mi.MenuCategory.RestaurantId == restaurantId);
+
+            if (menuItem == null)
+            {
+                throw new KeyNotFoundException($"Menu item with ID {menuItemId} not found for restaurant with ID {restaurantId}.");
+            }
+
+            var relatedMenuItems = await repository.AllReadOnly<MenuItem>()
+                .Where(mi => mi.MenuCategory.RestaurantId == restaurantId && mi.Id != menuItemId)
+                .OrderBy(mi => Guid.NewGuid())
+                .Take(5)
+                .Select(mi => new RelatedMenuItemsDto
+                {
+                    Id = mi.Id,
+                    Name = mi.Name,
+                    ImageUrl = mi.ImageUrl,
+                    Price = mi.Price
+                })
+                .ToListAsync();
+
+            var menuItemDto = new MenuItemDto
+            {
+                Id = menuItem.Id,
+                Name = menuItem.Name,
+                Description = menuItem.Description,
+                Price = menuItem.Price,
+                ImageUrl = menuItem.ImageUrl,
+                MenuCategoryId = menuItem.MenuCategoryId,
+                MenuCategoryName = menuItem.MenuCategory?.Name,
+                RelatedMenuItems = relatedMenuItems
+            };
+
+            return menuItemDto;
+        }
+
         public async Task<PagedResult<MenuItemsDto>> GetAllMenuItemsForRestaurantAsync(int restaurantId, MenuItemQueryParametersDto queryParams)
         {
             IQueryable<MenuItem> query = repository.AllReadOnly<MenuItem>()
