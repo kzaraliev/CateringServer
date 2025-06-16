@@ -1,4 +1,5 @@
 ﻿using Catering.Core.Contracts;
+using Catering.Core.DTOs.Cart;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -18,9 +19,18 @@ namespace Catering.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCart([FromQuery] Guid? cartId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var cart = await cartService.GetOrCreateCartAsync(cartId, userId);
+            return Ok(cart);
+        }
+
+        [HttpPost("items")]
+        public async Task<IActionResult> AddItemToCart([FromQuery] Guid? cartId, [FromBody] AddItemToCartRequestDto request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var cart = await cartService.AddItemToCartAsync(cartId, userId, request);
             return Ok(cart);
         }
     }
