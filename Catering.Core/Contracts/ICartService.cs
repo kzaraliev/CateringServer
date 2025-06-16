@@ -8,5 +8,6 @@ namespace Catering.Core.Contracts
         Task<CartDto> AddItemToCartAsync(Guid? cartId, string? userId, AddItemToCartRequestDto request);
         Task<CartDto> UpdateCartItemQuantityAsync(Guid? cartId, string? userId, int cartItemId, UpdateCartItemQuantityRequestDto request);
         Task<CartDto> RemoveItemFromCartAsync(Guid? cartId, string? userId, int cartItemId);
+        Task<CartDto> ClearCartAsync(Guid? cartId, string? userId);
     }
 }

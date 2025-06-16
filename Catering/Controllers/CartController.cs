@@ -61,5 +61,14 @@ namespace Catering.Controllers
             var cart = await cartService.RemoveItemFromCartAsync(cartId, userId, cartItemId);
             return Ok(cart);
         }
+
+        [HttpDelete]
+        public async Task<IActionResult> ClearCart([FromQuery] Guid? cartId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var cart = await cartService.ClearCartAsync(cartId, userId);
+            return Ok(cart);
+        }
     }
 }

@@ -107,6 +107,24 @@ namespace Catering.Core.Services
             return MapCartToDto(cart);
         }
 
+        public async Task<CartDto> ClearCartAsync(Guid? cartId, string? userId)
+        {
+            var cart = await GetOrCreateCartEntityAsync(cartId, userId);
+
+            if (cart.CartItems.Any())
+            {
+                repository.RemoveRange(cart.CartItems);
+                cart.CartItems.Clear();
+            }
+
+            cart.LastModified = DateTime.UtcNow;
+
+            await repository.SaveChangesAsync();
+
+            return MapCartToDto(cart);
+        }
+
+
         private async Task<Cart> GetOrCreateCartEntityAsync(Guid? cartId, string? userId)
         {
             Cart? cart = null;
