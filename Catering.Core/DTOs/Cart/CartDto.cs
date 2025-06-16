@@ -4,10 +4,10 @@ namespace Catering.Core.DTOs.Cart
 {
     public class CartDto
     {
-        public Guid Id { get; set; }
+        public required Guid Id { get; set; }
         public string? UserId { get; set; }
-        public decimal Subtotal { get; set; }
-        public int TotalItems { get; set; }
+        public required decimal Subtotal { get; set; }
+        public required int TotalItems { get; set; }
         public List<CartItemDto> Items { get; set; } = new List<CartItemDto>();
     }
 }

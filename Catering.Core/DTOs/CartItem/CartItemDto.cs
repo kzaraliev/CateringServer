@@ -2,11 +2,11 @@
 {
     public class CartItemDto
     {
-        public int Id { get; set; }
-        public int MenuItemId { get; set; }
+        public required int Id { get; set; }
+        public required int MenuItemId { get; set; }
         public required string Name { get; set; }
-        public int Quantity { get; set; }
-        public decimal Price { get; set; }
+        public required int Quantity { get; set; }
+        public required decimal Price { get; set; }
         public string? ImageUrl { get; set; }
     }
 }

@@ -20,22 +20,7 @@ namespace Catering.Core.Services
         {
             var cart = await GetOrCreateCartEntityAsync(cartId, userId);
 
-            var response = new CartDto
-            {
-                Id = cart.Id,
-                UserId = cart.UserId,
-                Subtotal = cart.CartItems.Sum(ci => ci.Quantity * ci.MenuItem.Price),
-                TotalItems = cart.CartItems.Sum(ci => ci.Quantity),
-                Items = cart.CartItems.Select(ci => new CartItemDto
-                {
-                    Id = ci.Id,
-                    MenuItemId = ci.MenuItemId,
-                    Quantity = ci.Quantity,
-                    Price = ci.MenuItem.Price,
-                    Name = ci.MenuItem.Name,
-                    ImageUrl = ci.MenuItem.ImageUrl,
-                }).ToList()
-            };
+            var response = MapCartToDto(cart);
 
             return response;
         }
@@ -74,22 +59,29 @@ namespace Catering.Core.Services
 
             await repository.SaveChangesAsync();
 
-            var response = new CartDto
+            var response = MapCartToDto(cart);
+
+            return response;
+        }
+
+        public async Task<CartDto> UpdateCartItemQuantityAsync(Guid? cartId, string? userId, int cartItemId, UpdateCartItemQuantityRequestDto request)
+        {
+            var cart = await GetOrCreateCartEntityAsync(cartId, userId);
+
+            var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.Id == cartItemId);
+
+            if (existingCartItem == null)
             {
-                Id = cart.Id,
-                UserId = cart.UserId,
-                Subtotal = cart.CartItems.Sum(ci => ci.Quantity * ci.MenuItem.Price),
-                TotalItems = cart.CartItems.Sum(ci => ci.Quantity),
-                Items = cart.CartItems.Select(ci => new CartItemDto
-                {
-                    Id = ci.Id,
-                    MenuItemId = ci.MenuItemId,
-                    Quantity = ci.Quantity,
-                    Price = ci.MenuItem.Price,
-                    Name = ci.MenuItem.Name,
-                    ImageUrl = ci.MenuItem.ImageUrl,
-                }).ToList()
-            };
+                throw new KeyNotFoundException($"Menu item with ID {cartItemId} not found in the cart.");
+            }
+
+            existingCartItem.Quantity = request.Quantity;
+
+            cart.LastModified = DateTime.UtcNow;
+
+            await repository.SaveChangesAsync();
+
+            var response = MapCartToDto(cart);
 
             return response;
         }
@@ -147,5 +139,26 @@ namespace Catering.Core.Services
             return cart;
         }
 
+        private CartDto MapCartToDto(Cart cart)
+        {
+            var cartItemsDto = cart.CartItems.Select(ci => new CartItemDto
+            {
+                Id = ci.Id,
+                MenuItemId = ci.MenuItemId,
+                Name = ci.MenuItem?.Name ?? "Unknown Item",
+                Quantity = ci.Quantity,
+                Price = ci.MenuItem?.Price ?? decimal.MaxValue,
+                ImageUrl = ci.MenuItem?.ImageUrl,
+            }).ToList();
+
+            return new CartDto
+            {
+                Id = cart.Id,
+                UserId = cart.UserId,
+                TotalItems = cartItemsDto.Sum(item => item.Quantity),
+                Subtotal = cart.CartItems.Sum(item => item.Quantity * item.MenuItem.Price),
+                Items = cartItemsDto,
+            };
+        }
     }
 }

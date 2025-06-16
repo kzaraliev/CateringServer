@@ -28,9 +28,28 @@ namespace Catering.Controllers
         [HttpPost("items")]
         public async Task<IActionResult> AddItemToCart([FromQuery] Guid? cartId, [FromBody] AddItemToCartRequestDto request)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var cart = await cartService.AddItemToCartAsync(cartId, userId, request);
+            return Ok(cart);
+        }
+
+        [HttpPut("items/{cartItemId}")]
+        public async Task<IActionResult> UpdateCartItemQuantity([FromQuery] Guid? cartId, [FromRoute] int cartItemId, [FromBody] UpdateCartItemQuantityRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var cart = await cartService.UpdateCartItemQuantityAsync(cartId, userId, cartItemId, request);
             return Ok(cart);
         }
     }
