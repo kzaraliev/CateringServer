@@ -72,7 +72,7 @@ namespace Catering.Core.Services
 
             if (existingCartItem == null)
             {
-                throw new KeyNotFoundException($"Menu item with ID {cartItemId} not found in the cart.");
+                throw new KeyNotFoundException($"Cart item with ID {cartItemId} not found in the cart.");
             }
 
             existingCartItem.Quantity = request.Quantity;
@@ -84,6 +84,27 @@ namespace Catering.Core.Services
             var response = MapCartToDto(cart);
 
             return response;
+        }
+
+        public async Task<CartDto> RemoveItemFromCartAsync(Guid? cartId, string? userId, int cartItemId)
+        {
+            Cart cart = await GetOrCreateCartEntityAsync(cartId, userId);
+
+            CartItem? existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.Id == cartItemId);
+
+            if (existingCartItem == null)
+            {
+                throw new KeyNotFoundException($"Cart item with ID {cartItemId} not found in the cart.");
+            }
+
+            repository.Remove(existingCartItem);
+            cart.CartItems.Remove(existingCartItem);
+
+            cart.LastModified = DateTime.UtcNow;
+
+            await repository.SaveChangesAsync();
+
+            return MapCartToDto(cart);
         }
 
         private async Task<Cart> GetOrCreateCartEntityAsync(Guid? cartId, string? userId)
