@@ -186,7 +186,7 @@ namespace Catering.Core.Services
                 MenuItemId = ci.MenuItemId,
                 Name = ci.MenuItem?.Name ?? "Unknown Item",
                 Quantity = ci.Quantity,
-                Price = ci.MenuItem?.Price ?? decimal.MaxValue,
+                Price = ci.MenuItem?.Price ?? 0M,
                 ImageUrl = ci.MenuItem?.ImageUrl,
             }).ToList();
 
@@ -195,7 +195,7 @@ namespace Catering.Core.Services
                 Id = cart.Id,
                 UserId = cart.UserId,
                 TotalItems = cartItemsDto.Sum(item => item.Quantity),
-                Subtotal = cart.CartItems.Sum(item => item.Quantity * item.MenuItem.Price),
+                Subtotal = cart.CartItems.Sum(item => item.Quantity * (item.MenuItem?.Price ?? 0M)),
                 Items = cartItemsDto,
             };
         }
