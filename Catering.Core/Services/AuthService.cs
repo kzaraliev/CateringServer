@@ -37,7 +37,6 @@ namespace Catering.Core.Services
         {
             var identityUser = new ApplicationUser()
             {
-                UserName = user.Username,
                 Email = user.Email
             };
 
@@ -177,28 +176,27 @@ namespace Catering.Core.Services
             string jwtToken = await GenerateTokenStringAsync(identityUser, userRoles);
             string refreshToken = await CreateRefreshTokenAsync(identityUser.Id);
 
-            return new LoginResponseDto
+            var response = new LoginResponseDto
             {
                 UserId = identityUser.Id,
-                Username = identityUser.UserName ?? "Error",
+                Username = identityUser.UserName ?? null,
                 Email = identityUser.Email ?? "Error",
                 Token = jwtToken,
                 RefreshToken = refreshToken,
                 Roles = userRoles
             };
+
+            return response;
         }
 
-        public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto refreshTokenDto)
+        public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto refreshTokenDto, string? userId)
         {
-            var principal = GetPrincipalFromExpiredToken(refreshTokenDto.Token);
-
-            var username = principal.Identity?.Name;
-            if (username == null)
+            if (string.IsNullOrWhiteSpace(userId))
             {
-                throw new InvalidOperationException("The provided access token is malformed or invalid.");
+                throw new UnauthorizedAccessException("User is not authenticated.");
             }
 
-            var identityUser = await userManager.FindByNameAsync(username);
+            var identityUser = await userManager.FindByIdAsync(userId);
             if (identityUser == null)
             {
                 throw new UnauthorizedAccessException("User not found");

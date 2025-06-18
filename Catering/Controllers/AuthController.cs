@@ -93,7 +93,9 @@ namespace Catering.Controllers
                 return BadRequest(ModelState);
             }
 
-            var result = await authService.RefreshTokenAsync(refreshTokenRequest);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var result = await authService.RefreshTokenAsync(refreshTokenRequest, userId);
             return Ok(result);
         }
 

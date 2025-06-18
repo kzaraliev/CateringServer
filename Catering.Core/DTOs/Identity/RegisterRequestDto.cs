@@ -5,9 +5,6 @@ namespace Catering.Core.DTOs.Identity
 {
     public class RegisterRequestDto
     {
-        [Required(ErrorMessage = RequiredMessage)]
-        public required string Username { get; set; }
-
         [EmailAddress]
         [Required(ErrorMessage = RequiredMessage)]
         public required string Email { get; set; }

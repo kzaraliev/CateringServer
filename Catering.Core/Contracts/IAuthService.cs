@@ -8,7 +8,7 @@ namespace Catering.Core.Contracts
         Task<IdentityResult> RegisterAsync(RegisterRequestDto user);
         Task ForgotPasswordAsync(ForgotPasswordRequestDto user);
         Task ResetPasswordAsync(ResetPasswordRequestDto user);
-        Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto refreshTokenDto);
+        Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto refreshTokenDto, string? userId);
         Task LogoutAsync(LogoutRequestDto logoutRequest, string? userId);
         Task EmailConfirmationAsync(string email, string token);
         Task RequestLoginCodeAsync(RequestLoginCodeDto request);
