@@ -74,9 +74,15 @@ namespace Catering.Core.Services
             return result;
         }
 
-        public async Task LogoutAsync(LogoutRequestDto logoutRequest, string username)
+        public async Task LogoutAsync(LogoutRequestDto logoutRequest, string? userId)
         {
-            var user = await userManager.FindByNameAsync(username);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new UnauthorizedAccessException("User is not authenticated.");
+            }
+
+            var user = await userManager.FindByIdAsync(userId);
+
             if (user == null)
             {
                 throw new InvalidOperationException("User not found");

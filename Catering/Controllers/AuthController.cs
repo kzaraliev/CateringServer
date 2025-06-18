@@ -3,6 +3,7 @@ using Catering.Core.Contracts;
 using Catering.Core.DTOs.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Catering.Controllers
 {
@@ -104,13 +105,9 @@ namespace Catering.Controllers
                 return BadRequest(ModelState);
             }
 
-            var username = User.Identity?.Name;
-            if (string.IsNullOrWhiteSpace(username))
-            {
-                return Unauthorized("Username not found in token");
-            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            await authService.LogoutAsync(logoutRequest, username);
+            await authService.LogoutAsync(logoutRequest, userId);
             return Ok(new { message = "Logout successful" });
         }
 
