@@ -33,12 +33,13 @@ namespace Catering.Core.Services
                 .Where(mi => mi.MenuCategory.RestaurantId == restaurantId && mi.Id != menuItemId)
                 .OrderBy(mi => Guid.NewGuid())
                 .Take(5)
-                .Select(mi => new RelatedMenuItemsDto
+                .Select(mi => new RelatedMenuItemDto
                 {
                     Id = mi.Id,
                     Name = mi.Name,
                     ImageUrl = mi.ImageUrl,
-                    Price = mi.Price
+                    Price = mi.Price,
+                    IsAvailable = mi.IsAvailable
                 })
                 .ToListAsync();
 
@@ -48,6 +49,7 @@ namespace Catering.Core.Services
                 Name = menuItem.Name,
                 Description = menuItem.Description,
                 Price = menuItem.Price,
+                IsAvailable = menuItem.IsAvailable,
                 ImageUrl = menuItem.ImageUrl,
                 MenuCategoryId = menuItem.MenuCategoryId,
                 MenuCategoryName = menuItem.MenuCategory?.Name,
@@ -63,6 +65,12 @@ namespace Catering.Core.Services
                 .Include(mi => mi.MenuCategory);
 
             query = query.Where(mi => mi.MenuCategory.RestaurantId == restaurantId);
+
+            // Filter by availability if specified
+            if (queryParams.IsAvailable.HasValue)
+            {
+                query = query.Where(mi => mi.IsAvailable == queryParams.IsAvailable.Value);
+            }
 
             //Search
             if (!string.IsNullOrEmpty(queryParams.SearchTerm))
@@ -89,6 +97,7 @@ namespace Catering.Core.Services
                     ImageUrl = mi.ImageUrl,
                     MenuCategoryId = mi.MenuCategoryId,
                     Price = mi.Price,
+                    IsAvailable = mi.IsAvailable,
                 });
 
             return response;
@@ -107,6 +116,7 @@ namespace Catering.Core.Services
                 Name = menuItemDto.Name,
                 Description = menuItemDto.Description,
                 Price = menuItemDto.Price,
+                IsAvailable = menuItemDto.IsAvailable,
                 ImageUrl = menuItemDto.ImageUrl,
                 MenuCategoryId = menuItemDto.MenuCategoryId
             };
@@ -127,6 +137,7 @@ namespace Catering.Core.Services
             menuItem.Name = menuItemDto.Name ?? menuItem.Name;
             menuItem.Description = menuItemDto.Description ?? menuItem.Description;
             menuItem.Price = menuItemDto.Price ?? menuItem.Price;
+            menuItem.IsAvailable = menuItemDto.IsAvailable ?? menuItem.IsAvailable;
             menuItem.ImageUrl = menuItemDto.ImageUrl ?? menuItem.ImageUrl;
 
             if (menuItemDto.MenuCategoryId.HasValue && menuItemDto.MenuCategoryId.Value != menuItem.MenuCategoryId)

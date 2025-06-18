@@ -42,6 +42,14 @@ namespace Catering.Infrastructure.Data.Models
         public decimal Price { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether the menu item is currently available for order.
+        /// Defaults to true.
+        /// </summary>
+        [Required]
+        [Comment("Indicates if the menu item is currently available for order.")]
+        public bool IsAvailable { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the image URL for the menu item.
         /// </summary>
         [Url]

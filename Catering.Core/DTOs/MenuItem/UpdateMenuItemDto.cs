@@ -16,6 +16,8 @@ namespace Catering.Core.DTOs.MenuItem
         [Range(0.01, double.MaxValue, ErrorMessage = "Price must be a positive value.")]
         public decimal? Price { get; set; }
 
+        public bool? IsAvailable { get; set; }
+
         [Url]
         public string? ImageUrl { get; set; }
 

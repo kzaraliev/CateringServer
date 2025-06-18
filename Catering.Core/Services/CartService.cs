@@ -30,7 +30,7 @@ namespace Catering.Core.Services
             var cart = await GetOrCreateCartEntityAsync(cartId, userId);
 
             var menuItem = await repository.AllReadOnly<MenuItem>()
-                                           .FirstOrDefaultAsync(m => m.Id == request.MenuItemId);
+                                           .FirstOrDefaultAsync(m => m.Id == request.MenuItemId && m.IsAvailable == true);
 
             if (menuItem == null)
             {
@@ -147,6 +147,7 @@ namespace Catering.Core.Services
                         LastModified = DateTime.UtcNow
                     };
                     await repository.AddAsync(cart);
+                    await repository.SaveChangesAsync();
                 }
             }
             // --- Guest User Logic ---
@@ -170,10 +171,11 @@ namespace Catering.Core.Services
                         LastModified = DateTime.UtcNow
                     };
                     await repository.AddAsync(cart);
+                    await repository.SaveChangesAsync();
                 }
             }
 
-            await repository.SaveChangesAsync();
+            await PerformCartCleanupAsync(cart);
 
             return cart;
         }
@@ -198,6 +200,31 @@ namespace Catering.Core.Services
                 Subtotal = cart.CartItems.Sum(item => item.Quantity * (item.MenuItem?.Price ?? 0M)),
                 Items = cartItemsDto,
             };
+        }
+
+        // This method checks the cart for items that are no longer available and removes them.
+        private async Task PerformCartCleanupAsync(Cart cart)
+        {
+            if (cart.CartItems.Any())
+            {
+                List<CartItem> itemsToRemove = cart.CartItems
+                                        .Where(ci => ci.MenuItem == null || !ci.MenuItem.IsAvailable)
+                                        .ToList();
+
+                if (itemsToRemove.Any())
+                {
+                    repository.RemoveRange(itemsToRemove);
+
+                    foreach (var item in itemsToRemove)
+                    {
+                        cart.CartItems.Remove(item);
+                    }
+
+                    cart.LastModified = DateTime.UtcNow;
+
+                    await repository.SaveChangesAsync();
+                }
+            }
         }
     }
 }
