@@ -2,11 +2,11 @@
 {
     public class LoginResponseDto
     {
-        public string Token { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
-        public string UserId { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string RefreshToken {  get; set; } = string.Empty;
+        public required string Token { get; set; }
+        public required string Username { get; set; }
+        public required string UserId { get; set; }
+        public required string Email { get; set; }
+        public required string RefreshToken {  get; set; }
         public IEnumerable<string> Roles { get; set; } = new List<string>();
     }
 }

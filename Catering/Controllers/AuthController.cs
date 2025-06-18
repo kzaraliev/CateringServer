@@ -18,19 +18,6 @@ namespace Catering.Controllers
             authService = _authService;
         }
 
-        [HttpPost("login")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginRequestDto user)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var result = await authService.LoginAsync(user);
-            return Ok(result);
-        }
-
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterRequestDto user)
@@ -41,7 +28,33 @@ namespace Catering.Controllers
             }
 
             var result = await authService.RegisterAsync(user);
-            return StatusCode(201, new { Message = "User registered successfully" });
+            return StatusCode(201, new { message = "User registered successfully" });
+        }
+
+        [HttpPost("request-login-code")]
+        [AllowAnonymous]    
+        public async Task<IActionResult> RequestLoginCode(RequestLoginCodeDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            await authService.RequestLoginCodeAsync(request);
+            return Ok(new { message = "Login code is sent"});
+        }
+
+        [HttpPost("verify-login-code")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyLoginCode(VerifyLoginCodeDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await authService.VerifyLoginCodeAsync(request);
+            return Ok(result);
         }
 
         [HttpPost("forgot-password")]

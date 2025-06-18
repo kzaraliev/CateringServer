@@ -33,44 +33,6 @@ namespace Catering.Core.Services
             repository = _repository;
         }
 
-        public async Task<LoginResponseDto> LoginAsync(LoginRequestDto user)
-        {
-            var identityUser = await userManager.FindByEmailAsync(user.Email);
-            if (identityUser == null)
-            {
-                throw new UnauthorizedAccessException("Invalid credentials");
-            }
-
-            if (!identityUser.EmailConfirmed)
-            {
-                await SendConfirmationEmailAsync(identityUser, user.ClientUri);
-                throw new UnauthorizedAccessException("Email not confirmed. A new confirmation email has been sent to your address.");
-            }
-
-            bool passwordValid = await userManager.CheckPasswordAsync(identityUser, user.Password);
-            if (!passwordValid)
-            {
-                throw new UnauthorizedAccessException("Invalid credentials");
-            }
-
-            var userRoles = await userManager.GetRolesAsync(identityUser);
-            string token = await GenerateTokenStringAsync(identityUser, userRoles);
-
-            string refreshToken = await CreateRefreshTokenAsync(identityUser.Id);
-
-            LoginResponseDto response = new LoginResponseDto()
-            {
-                UserId = identityUser.Id,
-                Username = identityUser.UserName ?? "Error",
-                Email = identityUser.Email ?? "Error",
-                Token = token,
-                RefreshToken = refreshToken,
-                Roles = userRoles
-            };
-
-            return response;
-        }
-
         public async Task<IdentityResult> RegisterAsync(RegisterRequestDto user)
         {
             var identityUser = new ApplicationUser()
@@ -79,7 +41,7 @@ namespace Catering.Core.Services
                 Email = user.Email
             };
 
-            var result = await userManager.CreateAsync(identityUser, user.Password);
+            var result = await userManager.CreateAsync(identityUser);
 
             if (!result.Succeeded)
             {
@@ -131,6 +93,93 @@ namespace Catering.Core.Services
 
             refreshToken.Revoked = DateTime.UtcNow;
             await repository.SaveChangesAsync();
+        }
+
+        public async Task RequestLoginCodeAsync(RequestLoginCodeDto request)
+        {
+            var user = await userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return;
+            }
+
+            if (!user.EmailConfirmed)
+            {
+                await SendConfirmationEmailAsync(user, request.ClientUri);
+                throw new UnauthorizedAccessException("Email not confirmed. A new confirmation email has been sent to your address.");
+            }
+
+            var existingCodes = await repository
+                .All<LoginCode>()
+                .Where(lc => lc.UserId == user.Id && lc.UsedAt == null && lc.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
+
+            foreach (var code in existingCodes)
+            {
+                code.UsedAt = DateTime.UtcNow;
+            }
+
+            if (existingCodes.Any())
+            {
+                await repository.SaveChangesAsync();
+            }
+
+            string sixDigitCode = GenerateNumericCode(6);
+            int expiresInMinutes = int.Parse(config["Auth:LoginCodeExpiresInMinutes"] ?? "10");
+
+            var loginCode = new LoginCode
+            {
+                UserId = user.Id,
+                Code = sixDigitCode,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(expiresInMinutes)
+            };
+
+            await repository.AddAsync(loginCode);
+            await repository.SaveChangesAsync();
+
+            var emailSubject = "Your Login Code";
+            var emailBody = $"Your one-time login code is: <strong>{sixDigitCode}</strong>. This code is valid for {expiresInMinutes} minutes. If you did not request this, please ignore this email.";
+            await emailService.SendEmailAsync(new Message([request.Email], emailSubject, emailBody));
+        }
+
+        public async Task<LoginResponseDto> VerifyLoginCodeAsync(VerifyLoginCodeDto request)
+        {
+            var identityUser = await userManager.FindByEmailAsync(request.Email);
+            if (identityUser == null)
+            {
+                throw new InvalidOperationException("User not found.");
+            }
+
+            var loginCode = await repository
+                .All<LoginCode>()
+                .Where(lc => lc.UserId == identityUser.Id && lc.Code == request.Code && lc.UsedAt == null)
+                .OrderByDescending(lc => lc.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (loginCode == null || loginCode.ExpiresAt < DateTime.UtcNow)
+            {
+                throw new UnauthorizedAccessException("Invalid or expired login code.");
+            }
+
+            loginCode.UsedAt = DateTime.UtcNow;
+            await repository.SaveChangesAsync();
+
+            await RevokeAllRefreshTokensAsync(identityUser.Id);
+
+            var userRoles = await userManager.GetRolesAsync(identityUser);
+            string jwtToken = await GenerateTokenStringAsync(identityUser, userRoles);
+            string refreshToken = await CreateRefreshTokenAsync(identityUser.Id);
+
+            return new LoginResponseDto
+            {
+                UserId = identityUser.Id,
+                Username = identityUser.UserName ?? "Error",
+                Email = identityUser.Email ?? "Error",
+                Token = jwtToken,
+                RefreshToken = refreshToken,
+                Roles = userRoles
+            };
         }
 
         public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto refreshTokenDto)
@@ -364,6 +413,17 @@ namespace Catering.Core.Services
             var tokenString = tokenHandler.WriteToken(token);
 
             return Task.FromResult(tokenString);
+        }
+
+        private string GenerateNumericCode(int length)
+        {
+            var random = new Random();
+            string code = string.Empty;
+            for (int i = 0; i < length; i++)
+            {
+                code += random.Next(0, 9).ToString();
+            }
+            return code;
         }
     }
 }

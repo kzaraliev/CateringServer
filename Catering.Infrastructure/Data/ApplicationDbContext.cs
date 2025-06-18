@@ -63,5 +63,6 @@ namespace Catering.Infrastructure.Data
         public DbSet<PartnershipRequest> PartnershipRequests { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<LoginCode> LoginCodes { get; set; }
     }
 }

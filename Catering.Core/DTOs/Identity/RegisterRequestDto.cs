@@ -13,8 +13,6 @@ namespace Catering.Core.DTOs.Identity
         public required string Email { get; set; }
 
         [Required(ErrorMessage = RequiredMessage)]
-        public required string Password { get; set; }
-
         public string ClientUri { get; set; } = null!;
     }
 }
