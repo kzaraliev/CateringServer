@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Catering.Core.DTOs.Identity
+namespace Catering.Core.DTOs.Admin
 {
     public class AssignUserRoleRequestDto
     {

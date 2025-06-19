@@ -18,6 +18,13 @@ namespace Catering.Controllers
             adminService = _adminService;
         }
 
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers([FromQuery] UserQueryParametersDto queryParams)
+        {
+            var users = await adminService.GetAllUsersAsync(queryParams);
+            return Ok(users);
+        }
+
         [HttpPost("users/{targetUserId}/roles")]
         public async Task<IActionResult> AssignRoleToUser(string targetUserId, AssignUserRoleRequestDto request)
         {
