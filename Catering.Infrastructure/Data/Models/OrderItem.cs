@@ -32,17 +32,19 @@ namespace Catering.Infrastructure.Data.Models
         public Order Order { get; set; } = null!;
 
         /// <summary>
-        /// Gets or sets the identifier of the menu item being ordered.
+        /// Gets or sets the menu item.
         /// </summary>
         [Required]
-        [Comment("Menu Item Identifier")]
-        public int MenuItemId { get; set; }
+        [StringLength(NameMaxLength)]
+        [Comment("Name of the menu item")]
+        public required string ItemName { get; set; }
 
         /// <summary>
-        /// Gets or sets the menu item being ordered.
+        /// Gets or sets the image of the menu item.
         /// </summary>
-        [ForeignKey(nameof(MenuItemId))]
-        public MenuItem MenuItem { get; set; } = null!;
+        [Comment("Image of the menu item")]
+        [StringLength(ImageUrlMaxLength)]
+        public string? ItemImageUrl { get; set; }
 
         /// <summary>
         /// Gets or sets the quantity of the menu item being ordered.
@@ -66,12 +68,5 @@ namespace Catering.Infrastructure.Data.Models
         [Comment("Total price for this order item")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPrice { get; set; }
-
-        /// <summary>
-        /// Gets or sets any special instructions for preparing this menu item.
-        /// </summary>
-        [MaxLength(SpecialInstructionsMaxLength)]
-        [Comment("Special instructions for this menu item")]
-        public string? SpecialInstructions { get; set; }
     }
 } 

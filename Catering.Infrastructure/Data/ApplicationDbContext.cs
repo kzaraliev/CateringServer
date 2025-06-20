@@ -29,12 +29,6 @@ namespace Catering.Infrastructure.Data
                 .HasForeignKey(o => o.CustomerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<OrderItem>()
-                .HasOne(oi => oi.MenuItem)
-                .WithMany(mi => mi.OrderItems)
-                .HasForeignKey(oi => oi.MenuItemId)
-                .OnDelete(DeleteBehavior.NoAction);
-
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.Restaurant)
                 .WithMany(r => r.Reviews)
