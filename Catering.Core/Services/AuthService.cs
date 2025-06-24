@@ -37,7 +37,8 @@ namespace Catering.Core.Services
         {
             var identityUser = new ApplicationUser()
             {
-                Email = user.Email
+                Email = user.Email,
+                UserName = user.Username,
             };
 
             var result = await userManager.CreateAsync(identityUser);
