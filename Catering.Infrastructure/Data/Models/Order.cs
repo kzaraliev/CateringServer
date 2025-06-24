@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using static Catering.Infrastructure.Constants.OrderConstants;
+using static Catering.Infrastructure.Constants.AddressConstants;
 
 namespace Catering.Infrastructure.Data.Models
 {
@@ -28,16 +29,37 @@ namespace Catering.Infrastructure.Data.Models
 
         /// <summary>
         /// Gets or sets the identifier of the customer who placed the order.
+        /// This is null for guest orders.
         /// </summary>
-        [Required]
-        [Comment("Customer Identifier")]
-        public required string CustomerId { get; set; }
+        [Comment("Customer Identifier (nullable for guest orders)")]
+        public string? CustomerId { get; set; }
 
         /// <summary>
-        /// Gets or sets the customer who placed the order.
+        /// Gets or sets the customer who placed the order. Null if it's a guest order.
         /// </summary>
         [ForeignKey(nameof(CustomerId))]
-        public ApplicationUser Customer { get; set; } = null!;
+        public ApplicationUser? Customer { get; set; }
+
+        /// <summary>
+        /// Gets or sets the email for a guest customer.
+        /// </summary>
+        [MaxLength(EmailMaxLength)]
+        [Comment("Email for guest customer")]
+        public string? GuestEmail { get; set; }
+
+        /// <summary>
+        /// Gets or sets the phone number for a guest customer.
+        /// </summary>
+        [MaxLength(PhoneMaxLength)]
+        [Comment("Phone number for guest customer")]
+        public string? GuestPhoneNumber { get; set; }
+
+        /// <summary>
+        /// Gets or sets the first name for a guest customer.
+        /// </summary>
+        [MaxLength(GuestNameMaxLength)] // Assuming FirstNameMaxLength constant
+        [Comment("First name for guest customer")]
+        public string? GuestName { get; set; }
 
         /// <summary>
         /// Gets or sets the identifier of the restaurant that receives the order.
@@ -60,16 +82,32 @@ namespace Catering.Infrastructure.Data.Models
         public required OrderStatus Status { get; set; }
 
         /// <summary>
-        /// Gets or sets the identifier of the delivery address.
+        /// Gets or sets the type of order (Delivery or Pickup).
         /// </summary>
-        [Comment("Delivery Address Identifier")]
-        public int? DeliveryAddressId { get; set; }
+        [Required]
+        [Comment("Type of order: Delivery or Pickup")]
+        public required OrderType OrderType { get; set; }
 
         /// <summary>
-        /// Gets or sets the delivery address.
+        /// Gets or sets the street address. Nullable if OrderType is Pickup.
         /// </summary>
-        [ForeignKey(nameof(DeliveryAddressId))]
-        public Address? DeliveryAddress { get; set; }
+        [MaxLength(StreetMaxLength)]
+        [Comment("Street address")]
+        public string? Street { get; set; }
+
+        /// <summary>
+        /// Gets or sets the city. Nullable if OrderType is Pickup.
+        /// </summary>
+        [MaxLength(CityMaxLength)]
+        [Comment("City")]
+        public string? City { get; set; }
+
+        /// <summary>
+        /// Gets or sets the ZIP/postal code. Nullable if OrderType is Pickup.
+        /// </summary>
+        [MaxLength(ZipCodeMaxLength)]
+        [Comment("ZIP/Postal code")]
+        public string? PostalCode { get; set; }
 
         /// <summary>
         /// Gets or sets the requested delivery or pickup time.
@@ -112,7 +150,7 @@ namespace Catering.Infrastructure.Data.Models
         /// </summary>
         [Required]
         [Comment("Payment method used for the order")]
-        public required PaymentMethod PaymentMethod { get; set; }
+        public required Enums.PaymentMethod PaymentMethod { get; set; }
 
         /// <summary>
         /// Gets or sets any additional notes or instructions for the order.

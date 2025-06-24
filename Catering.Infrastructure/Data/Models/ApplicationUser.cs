@@ -21,11 +21,5 @@ namespace Catering.Infrastructure.Data.Models
         /// </summary>
         [Comment("Collection of orders placed by the user.")]
         public ICollection<Order> Orders { get; set; } = new List<Order>();
-
-        /// <summary>
-        /// Gets or sets the collection of addresses associated with the user.
-        /// </summary>
-        [Comment("Collection of addresses associated with the user.")]
-        public ICollection<Address> Addresses { get; set; } = new List<Address>();
     }
 }

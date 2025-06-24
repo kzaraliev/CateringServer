@@ -22,46 +22,6 @@ namespace Catering.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Catering.Infrastructure.Data.Models.Address", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasComment("Address Identifier");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasComment("City");
-
-                    b.Property<string>("PostalCode")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasComment("ZIP/Postal code");
-
-                    b.Property<string>("Street")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .HasComment("Street address");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
-
-                    b.ToTable("Addresses", t =>
-                        {
-                            t.HasComment("Represents a user address in the system for delivery or pickup.");
-                        });
-                });
-
             modelBuilder.Entity("Catering.Infrastructure.Data.Models.Cart", b =>
                 {
                     b.Property<Guid>("Id")
@@ -326,21 +286,36 @@ namespace Catering.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasComment("Actual delivery or pickup time");
 
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasComment("City");
+
                     b.Property<int?>("CouponId")
                         .HasColumnType("int");
 
                     b.Property<string>("CustomerId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)")
-                        .HasComment("Customer Identifier");
-
-                    b.Property<int?>("DeliveryAddressId")
-                        .HasColumnType("int")
-                        .HasComment("Delivery Address Identifier");
+                        .HasComment("Customer Identifier (nullable for guest orders)");
 
                     b.Property<decimal?>("DeliveryFee")
                         .HasColumnType("decimal(18,2)")
                         .HasComment("Delivery fee");
+
+                    b.Property<string>("GuestEmail")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasComment("Email for guest customer");
+
+                    b.Property<string>("GuestName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasComment("First name for guest customer");
+
+                    b.Property<string>("GuestPhoneNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("Phone number for guest customer");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
@@ -355,9 +330,18 @@ namespace Catering.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)")
                         .HasComment("Total amount after tax, discount, and delivery fee");
 
+                    b.Property<int>("OrderType")
+                        .HasColumnType("int")
+                        .HasComment("Type of order: Delivery or Pickup");
+
                     b.Property<int>("PaymentMethod")
                         .HasColumnType("int")
                         .HasComment("Payment method used for the order");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasComment("ZIP/Postal code");
 
                     b.Property<DateTime>("RequestedDeliveryTime")
                         .HasColumnType("datetime2")
@@ -371,6 +355,11 @@ namespace Catering.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasComment("Order status");
 
+                    b.Property<string>("Street")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasComment("Street address");
+
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("decimal(18,2)")
                         .HasComment("Subtotal amount before tax, discount, and delivery fee");
@@ -380,8 +369,6 @@ namespace Catering.Infrastructure.Migrations
                     b.HasIndex("CouponId");
 
                     b.HasIndex("CustomerId");
-
-                    b.HasIndex("DeliveryAddressId");
 
                     b.HasIndex("RestaurantId");
 
@@ -412,7 +399,8 @@ namespace Catering.Infrastructure.Migrations
                         .HasComment("Name of the menu item");
 
                     b.Property<int?>("MenuItemId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasComment("Original MenuItem ID");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("int")
@@ -991,13 +979,6 @@ namespace Catering.Infrastructure.Migrations
                     b.HasDiscriminator().HasValue("ApplicationUser");
                 });
 
-            modelBuilder.Entity("Catering.Infrastructure.Data.Models.Address", b =>
-                {
-                    b.HasOne("Catering.Infrastructure.Data.Models.ApplicationUser", null)
-                        .WithMany("Addresses")
-                        .HasForeignKey("ApplicationUserId");
-                });
-
             modelBuilder.Entity("Catering.Infrastructure.Data.Models.Cart", b =>
                 {
                     b.HasOne("Catering.Infrastructure.Data.Models.ApplicationUser", "User")
@@ -1079,12 +1060,7 @@ namespace Catering.Infrastructure.Migrations
                     b.HasOne("Catering.Infrastructure.Data.Models.ApplicationUser", "Customer")
                         .WithMany("Orders")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Catering.Infrastructure.Data.Models.Address", "DeliveryAddress")
-                        .WithMany("Orders")
-                        .HasForeignKey("DeliveryAddressId");
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Catering.Infrastructure.Data.Models.Restaurant", "Restaurant")
                         .WithMany("Orders")
@@ -1093,8 +1069,6 @@ namespace Catering.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
-
-                    b.Navigation("DeliveryAddress");
 
                     b.Navigation("Restaurant");
                 });
@@ -1235,11 +1209,6 @@ namespace Catering.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Catering.Infrastructure.Data.Models.Address", b =>
-                {
-                    b.Navigation("Orders");
-                });
-
             modelBuilder.Entity("Catering.Infrastructure.Data.Models.Cart", b =>
                 {
                     b.Navigation("CartItems");
@@ -1280,8 +1249,6 @@ namespace Catering.Infrastructure.Migrations
 
             modelBuilder.Entity("Catering.Infrastructure.Data.Models.ApplicationUser", b =>
                 {
-                    b.Navigation("Addresses");
-
                     b.Navigation("Orders");
 
                     b.Navigation("Restaurants");

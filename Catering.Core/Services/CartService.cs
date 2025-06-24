@@ -216,7 +216,7 @@ namespace Catering.Core.Services
         }
 
         // This method checks the cart for items that are no longer available and removes them.
-        private async Task PerformCartCleanupAsync(Cart cart)
+        public async Task PerformCartCleanupAsync(Cart cart)
         {
             if (cart.CartItems.Any())
             {
