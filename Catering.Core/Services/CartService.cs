@@ -30,11 +30,22 @@ namespace Catering.Core.Services
             var cart = await GetOrCreateCartEntityAsync(cartId, userId);
 
             var menuItem = await repository.AllReadOnly<MenuItem>()
+                                           .Include(m => m.MenuCategory)
                                            .FirstOrDefaultAsync(m => m.Id == request.MenuItemId && m.IsAvailable == true);
 
             if (menuItem == null)
             {
                 throw new KeyNotFoundException($"Menu item with ID {request.MenuItemId} not found or not available.");
+            }
+
+            if (cart.CartItems.Any())
+            {
+                var firstCartItemRestaurantId = cart.CartItems.FirstOrDefault()?.MenuItem?.MenuCategory?.RestaurantId;
+
+                if (firstCartItemRestaurantId.HasValue && firstCartItemRestaurantId.Value != menuItem.MenuCategory.RestaurantId)
+                {
+                    await ClearCartInternalAsync(cart);
+                }
             }
 
             var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.MenuItemId == request.MenuItemId);
@@ -135,6 +146,7 @@ namespace Catering.Core.Services
                 cart = await repository.All<Cart>()
                                          .Include(c => c.CartItems)
                                          .ThenInclude(ci => ci.MenuItem)
+                                         .ThenInclude(mi => mi.MenuCategory)
                                          .FirstOrDefaultAsync(c => c.UserId == userId);
 
                 if (cart == null)
@@ -158,6 +170,7 @@ namespace Catering.Core.Services
                     cart = await repository.All<Cart>()
                                          .Include(c => c.CartItems)
                                          .ThenInclude(ci => ci.MenuItem)
+                                         .ThenInclude(mi => mi.MenuCategory)
                                          .FirstOrDefaultAsync(c => c.Id == cartId.Value && c.UserId == null);
                 }
 
@@ -225,6 +238,17 @@ namespace Catering.Core.Services
                     await repository.SaveChangesAsync();
                 }
             }
+        }
+
+        private async Task ClearCartInternalAsync(Cart cart)
+        {
+            if (cart.CartItems.Any())
+            {
+                repository.RemoveRange(cart.CartItems);
+                cart.CartItems.Clear();
+            }
+            cart.LastModified = DateTime.UtcNow;
+            await repository.SaveChangesAsync();
         }
     }
 }
