@@ -28,11 +28,20 @@ namespace Catering.Core.Services
                 throw new InvalidOperationException("Cannot place an order from an empty cart.");
             }
 
-            var restaurantId = cart.CartItems.FirstOrDefault()?.MenuItem?.MenuCategory?.RestaurantId;
-            if (!restaurantId.HasValue)
+            //var restaurantId = cart.CartItems.FirstOrDefault()?.MenuItem?.MenuCategory?.RestaurantId;
+
+            var distinctRestaurantIds = cart.CartItems
+                                .Select(ci => ci.MenuItem?.MenuCategory?.RestaurantId)
+                                .Where(id => id.HasValue)
+                                .Distinct()
+                                .ToList();
+
+            if (distinctRestaurantIds.Count != 1)
             {
-                throw new InvalidOperationException("Could not determine the restaurant for the cart items. Data inconsistency detected.");
+                throw new InvalidOperationException("Cart contains items from multiple restaurants or no valid restaurant.");
             }
+
+            int restaurantId = distinctRestaurantIds.Single()!.Value;
 
             if (request.OrderType == OrderType.Delivery)
             {
@@ -58,7 +67,7 @@ namespace Catering.Core.Services
                 }
                 if (string.IsNullOrWhiteSpace(request.GuestName))
                 {
-                    throw new InvalidOperationException("Guest name are required for guest orders.");
+                    throw new InvalidOperationException("Guest name is required for guest orders.");
                 }
             }
 
@@ -67,11 +76,11 @@ namespace Catering.Core.Services
 
             // Fetch the restaurant to determine delivery fee.
             var restaurant = await repository.AllReadOnly<Restaurant>()
-                                             .FirstOrDefaultAsync(r => r.Id == restaurantId.Value);
+                                             .FirstOrDefaultAsync(r => r.Id == restaurantId);
 
             if (restaurant == null)
             {
-                throw new KeyNotFoundException($"Restaurant with ID {restaurantId.Value} not found.");
+                throw new KeyNotFoundException($"Restaurant with ID {restaurantId} not found.");
             }
 
             ApplicationUser? user = null;
@@ -100,7 +109,7 @@ namespace Catering.Core.Services
             var order = new Order
             {
                 OrderDate = DateTime.UtcNow,
-                RestaurantId = restaurantId.Value,
+                RestaurantId = restaurantId,
                 Status = OrderStatus.Pending,
                 OrderType = request.OrderType,
                 Street = request.Street,
