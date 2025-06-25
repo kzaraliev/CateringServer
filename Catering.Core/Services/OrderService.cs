@@ -28,8 +28,6 @@ namespace Catering.Core.Services
                 throw new InvalidOperationException("Cannot place an order from an empty cart.");
             }
 
-            //var restaurantId = cart.CartItems.FirstOrDefault()?.MenuItem?.MenuCategory?.RestaurantId;
-
             var distinctRestaurantIds = cart.CartItems
                                 .Select(ci => ci.MenuItem?.MenuCategory?.RestaurantId)
                                 .Where(id => id.HasValue)
