@@ -459,6 +459,31 @@ namespace Catering.Infrastructure.Migrations
                 comment: "Represents an individual menu item or product offered by the restaurant.");
 
             migrationBuilder.CreateTable(
+                name: "OrderItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false, comment: "Order Item Identifier")
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OrderId = table.Column<int>(type: "int", nullable: false, comment: "Order Identifier"),
+                    ItemName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false, comment: "Name of the menu item"),
+                    ItemImageUrl = table.Column<string>(type: "nvarchar(2048)", maxLength: 2048, nullable: true, comment: "Image of the menu item"),
+                    Quantity = table.Column<int>(type: "int", nullable: false, comment: "Quantity of the menu item"),
+                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false, comment: "Unit price at the time of ordering"),
+                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false, comment: "Total price for this order item")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderItems_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                },
+                comment: "Represents an item within an order in the catering system.");
+
+            migrationBuilder.CreateTable(
                 name: "Payments",
                 columns: table => new
                 {
@@ -511,37 +536,6 @@ namespace Catering.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 },
                 comment: "Represents an individual item within a shopping cart.");
-
-            migrationBuilder.CreateTable(
-                name: "OrderItems",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false, comment: "Order Item Identifier")
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    OrderId = table.Column<int>(type: "int", nullable: false, comment: "Order Identifier"),
-                    MenuItemId = table.Column<int>(type: "int", nullable: true, comment: "Original MenuItem ID"),
-                    ItemName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false, comment: "Name of the menu item"),
-                    ItemImageUrl = table.Column<string>(type: "nvarchar(2048)", maxLength: 2048, nullable: true, comment: "Image of the menu item"),
-                    Quantity = table.Column<int>(type: "int", nullable: false, comment: "Quantity of the menu item"),
-                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false, comment: "Unit price at the time of ordering"),
-                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false, comment: "Total price for this order item")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrderItems", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_OrderItems_MenuItems_MenuItemId",
-                        column: x => x.MenuItemId,
-                        principalTable: "MenuItems",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_OrderItems_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                },
-                comment: "Represents an item within an order in the catering system.");
 
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
@@ -627,11 +621,6 @@ namespace Catering.Infrastructure.Migrations
                 name: "IX_MenuItems_MenuCategoryId",
                 table: "MenuItems",
                 column: "MenuCategoryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OrderItems_MenuItemId",
-                table: "OrderItems",
-                column: "MenuItemId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_OrderId",

@@ -26,7 +26,7 @@ namespace Catering.Core.DTOs.Order
         public DateTime RequestedDeliveryTime { get; set; }
         public DateTime? ActualDeliveryTime { get; set; }
         public decimal Subtotal { get; set; }
-        public decimal? DeliveryFee { get; set; }
+        public decimal DeliveryFee { get; set; }
         public decimal OrderTotal { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
         public string? Notes { get; set; }

@@ -69,11 +69,5 @@ namespace Catering.Infrastructure.Data.Models
         /// </summary>
         [ForeignKey(nameof(MenuCategoryId))]
         public MenuCategory MenuCategory { get; set; } = null!;
-
-        /// <summary>
-        /// Gets or sets the collection of order items associated with this menu item.
-        /// </summary>
-        [Comment("Collection of order items associated with this menu item")]
-        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     }
 }

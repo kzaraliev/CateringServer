@@ -30,12 +30,14 @@ namespace Catering.Core.DTOs.Order
 
         // For guest orders, these fields are required
         [EmailAddress(ErrorMessage = "Invalid email format.")]
+        [MaxLength(EmailMaxLength)]
         public string? GuestEmail { get; set; }
 
         [Phone]
+        [MaxLength(PhoneMaxLength)]
         public string? GuestPhoneNumber { get; set; }
 
-        [StringLength(3, MinimumLength = 2, ErrorMessage = "First name must be between {2} and {1} characters.")]
+        [StringLength(GuestNameMaxLength, MinimumLength = 2, ErrorMessage = "First name must be between {2} and {1} characters.")]
         public string? GuestName { get; set; }
     }
 }

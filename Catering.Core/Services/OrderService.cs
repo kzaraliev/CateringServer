@@ -1,9 +1,11 @@
-﻿using Catering.Core.Contracts;
+﻿using Catering.Core.Constants;
+using Catering.Core.Contracts;
 using Catering.Core.DTOs.Order;
 using Catering.Core.DTOs.OrderItem;
 using Catering.Infrastructure.Common;
 using Catering.Infrastructure.Data.Enums;
 using Catering.Infrastructure.Data.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Catering.Core.Services
@@ -12,15 +14,22 @@ namespace Catering.Core.Services
     {
         private readonly IRepository repository;
         private readonly ICartService cartService;
+        private readonly UserManager<ApplicationUser> userManager;
 
-        public OrderService(IRepository _repository, ICartService _cartService)
+        public OrderService(IRepository _repository, ICartService _cartService, UserManager<ApplicationUser> _userManager)
         {
             repository = _repository;
             cartService = _cartService;
+            userManager = _userManager;
         }
 
         public async Task<OrderDto> PlaceOrderAsync(string? userId, Guid? cartId, PlaceOrderRequestDto request)
         {
+            if (request.RequestedDeliveryTime <= DateTime.UtcNow.AddMinutes(5))
+            {
+                throw new InvalidOperationException("Requested delivery/pickup time must be in the future (at least 5 minutes from now).");
+            }
+
             var cart = await GetCartForCheckoutAsync(userId, cartId);
 
             if (!cart.CartItems.Any())
@@ -79,6 +88,11 @@ namespace Catering.Core.Services
             if (restaurant == null)
             {
                 throw new KeyNotFoundException($"Restaurant with ID {restaurantId} not found.");
+            }
+
+            if (!await IsRestaurantOpenAsync(restaurant.Id, request.RequestedDeliveryTime))
+            {
+                throw new InvalidOperationException("The restaurant is closed at the requested delivery/pickup time.");
             }
 
             ApplicationUser? user = null;
@@ -158,6 +172,108 @@ namespace Catering.Core.Services
             return MapOrderToDtoAsync(order);
         }
 
+        public async Task<OrderDto> CancelOrderAsync(int orderId, string? userId, string? guestEmail = null)
+        {
+            var order = await repository.All<Order>()
+                                        .Include(o => o.Restaurant)
+                                        .Include(o => o.Customer)
+                                        .Include(o => o.OrderItems)
+                                        .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+            {
+                throw new KeyNotFoundException($"Order with ID {orderId} not found.");
+            }
+
+            bool isAuthorized = false;
+
+            if (userId != null) // Authenticated user
+            {
+                var cancellingUser = await userManager.FindByIdAsync(userId);
+                if (cancellingUser == null)
+                {
+                    throw new UnauthorizedAccessException($"Authenticated user with ID {userId} not found.");
+                }
+
+                bool isCustomerOfOrder = (order.CustomerId == userId);
+                bool isAdmin = await userManager.IsInRoleAsync(cancellingUser, RoleNames.Admin);
+                bool isModerator = await userManager.IsInRoleAsync(cancellingUser, RoleNames.Moderator);
+
+                if (isCustomerOfOrder || isAdmin || isModerator)
+                {
+                    isAuthorized = true;
+                }
+            }
+            else // Guest user (userId is null)
+            {
+                if (!string.IsNullOrWhiteSpace(guestEmail) &&
+                    !string.IsNullOrWhiteSpace(order.GuestEmail) &&
+                    order.GuestEmail.Equals(guestEmail, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (order.CustomerId == null)
+                    {
+                        isAuthorized = true;
+                    }
+                }
+            }
+
+            if (!isAuthorized)
+            {
+                throw new UnauthorizedAccessException($"User is not authorized to cancel order {orderId}.");
+            }
+
+            if (order.Status == OrderStatus.Delivered ||
+                order.Status == OrderStatus.Completed ||
+                order.Status == OrderStatus.Cancelled)
+            {
+                throw new InvalidOperationException($"Order {orderId} cannot be cancelled as it is in '{order.Status}' status.");
+            }
+
+            if (order.Status == OrderStatus.Preparing || order.Status == OrderStatus.OutForDelivery || order.Status == OrderStatus.ReadyForPickup)
+            {
+                throw new InvalidOperationException($"Order {orderId} cannot be cancelled as it is already being processed by the restaurant (Status: {order.Status}). Please contact customer support.");
+            }
+
+
+            order.Status = OrderStatus.Cancelled;
+
+            await repository.SaveChangesAsync();
+
+            return MapOrderToDtoAsync(order);
+        }
+
+        private async Task<bool> IsRestaurantOpenAsync(int restaurantId, DateTime requestedTime)
+        {
+            var restaurant = await repository.AllReadOnly<Restaurant>()
+                                             .Include(r => r.WorkingDays)
+                                             .FirstOrDefaultAsync(r => r.Id == restaurantId);
+
+            if (restaurant == null)
+            {
+                return false;
+            }
+
+            DayOfWeek requestedDayOfWeek = requestedTime.DayOfWeek;
+            TimeSpan requestedTimeOfDay = requestedTime.TimeOfDay;
+
+            var workingDay = restaurant.WorkingDays
+                                       .FirstOrDefault(wd => wd.Day == requestedDayOfWeek);
+
+            if (workingDay == null)
+            {
+                return false;
+            }
+
+            if (workingDay.OpenTime <= workingDay.CloseTime)
+            {
+                return requestedTimeOfDay >= workingDay.OpenTime && requestedTimeOfDay <= workingDay.CloseTime;
+            }
+            else
+            {
+                return requestedTimeOfDay >= workingDay.OpenTime || requestedTimeOfDay <= workingDay.CloseTime;
+            }
+        }
+
         private async Task<Cart> GetCartForCheckoutAsync(string? userId, Guid? cartId)
         {
             Cart? cart;
@@ -201,9 +317,7 @@ namespace Catering.Core.Services
         {
             return cartItems.Select(ci => new OrderItem
             {
-                MenuItemId = ci.MenuItemId,
                 ItemName = ci.MenuItem?.Name ?? "Unknown Item",
-                ItemImageUrl = ci.MenuItem?.ImageUrl,
                 Quantity = ci.Quantity,
                 UnitPrice = ci.MenuItem?.Price ?? 0M,
                 TotalPrice = ci.Quantity * (ci.MenuItem?.Price ?? 0M)
@@ -215,9 +329,7 @@ namespace Catering.Core.Services
             var orderItemsDto = order.OrderItems.Select(oi => new OrderItemDto
             {
                 Id = oi.Id,
-                OriginalMenuItemId = oi.MenuItemId,
                 ItemName = oi.ItemName,
-                ItemImageUrl = oi.ItemImageUrl,
                 Quantity = oi.Quantity,
                 UnitPrice = oi.UnitPrice,
                 TotalPrice = oi.TotalPrice

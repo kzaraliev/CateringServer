@@ -19,10 +19,24 @@ namespace Catering.Controllers
         [HttpPost("checkout")]
         public async Task<IActionResult> Checkout([FromQuery] Guid? cartId, PlaceOrderRequestDto request)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var order = await orderService.PlaceOrderAsync(userId, cartId, request);
             return Ok(order);
+        }
+
+        [HttpPost("cancel-order")]
+        public async Task<IActionResult> CancelOrder(CancelOrderRequestDto request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var result = await orderService.CancelOrderAsync(request.OrderId, userId, request.GuestEmail);
+            return Ok(result);
         }
     }
 }

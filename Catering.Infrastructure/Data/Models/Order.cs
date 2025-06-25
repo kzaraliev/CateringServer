@@ -133,9 +133,10 @@ namespace Catering.Infrastructure.Data.Models
         /// <summary>
         /// Gets or sets the delivery fee.
         /// </summary>
+        [Required]
         [Comment("Delivery fee")]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal? DeliveryFee { get; set; }
+        public decimal DeliveryFee { get; set; }
 
         /// <summary>
         /// Gets or sets the total amount.

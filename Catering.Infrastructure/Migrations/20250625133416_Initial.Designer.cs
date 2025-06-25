@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Catering.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250624135922_Initial")]
+    [Migration("20250625133416_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -401,10 +401,6 @@ namespace Catering.Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasComment("Name of the menu item");
 
-                    b.Property<int?>("MenuItemId")
-                        .HasColumnType("int")
-                        .HasComment("Original MenuItem ID");
-
                     b.Property<int>("OrderId")
                         .HasColumnType("int")
                         .HasComment("Order Identifier");
@@ -422,8 +418,6 @@ namespace Catering.Infrastructure.Migrations
                         .HasComment("Unit price at the time of ordering");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("MenuItemId");
 
                     b.HasIndex("OrderId");
 
@@ -1078,10 +1072,6 @@ namespace Catering.Infrastructure.Migrations
 
             modelBuilder.Entity("Catering.Infrastructure.Data.Models.OrderItem", b =>
                 {
-                    b.HasOne("Catering.Infrastructure.Data.Models.MenuItem", null)
-                        .WithMany("OrderItems")
-                        .HasForeignKey("MenuItemId");
-
                     b.HasOne("Catering.Infrastructure.Data.Models.Order", "Order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
@@ -1225,11 +1215,6 @@ namespace Catering.Infrastructure.Migrations
             modelBuilder.Entity("Catering.Infrastructure.Data.Models.MenuCategory", b =>
                 {
                     b.Navigation("MenuItems");
-                });
-
-            modelBuilder.Entity("Catering.Infrastructure.Data.Models.MenuItem", b =>
-                {
-                    b.Navigation("OrderItems");
                 });
 
             modelBuilder.Entity("Catering.Infrastructure.Data.Models.Order", b =>

@@ -4,6 +4,7 @@ using Catering.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Catering.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250625134536_RemoveItemImageUrlFromOrderItem")]
+    partial class RemoveItemImageUrlFromOrderItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -298,7 +301,7 @@ namespace Catering.Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasComment("Customer Identifier (nullable for guest orders)");
 
-                    b.Property<decimal>("DeliveryFee")
+                    b.Property<decimal?>("DeliveryFee")
                         .HasColumnType("decimal(18,2)")
                         .HasComment("Delivery fee");
 

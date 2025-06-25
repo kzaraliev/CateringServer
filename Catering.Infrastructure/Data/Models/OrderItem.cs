@@ -32,25 +32,12 @@ namespace Catering.Infrastructure.Data.Models
         public Order Order { get; set; } = null!;
 
         /// <summary>
-        /// Gets or sets the original MenuItem ID. Useful for analytics or re-ordering.
-        /// </summary>
-        [Comment("Original MenuItem ID")]
-        public int? MenuItemId { get; set; }
-
-        /// <summary>
         /// Gets or sets the menu item.
         /// </summary>
         [Required]
         [StringLength(NameMaxLength)]
         [Comment("Name of the menu item")]
         public required string ItemName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the image of the menu item.
-        /// </summary>
-        [Comment("Image of the menu item")]
-        [StringLength(ImageUrlMaxLength)]
-        public string? ItemImageUrl { get; set; }
 
         /// <summary>
         /// Gets or sets the quantity of the menu item being ordered.
