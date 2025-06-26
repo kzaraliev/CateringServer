@@ -109,12 +109,26 @@ namespace Catering.Core.Services
 
             decimal deliveryFee = 0M;
 
-            //Will do!
-            //if (request.OrderType == OrderType.Delivery)
-            //{
-            //    deliveryFee = restaurant.DeliveryFee; // Assuming Restaurant has a DeliveryFee property
-            //                                          // Implement more complex logic based on distance, order total, etc., here if needed
-            //}
+            if (request.OrderType == OrderType.Delivery)
+            {
+                if (!restaurant.SupportedDeliveryMethods.HasFlag(RestaurantDeliveryMethods.Delivery))
+                {
+                    throw new InvalidOperationException($"Restaurant '{restaurant.Name}' does not offer delivery.");
+                }
+
+                deliveryFee = restaurant.DeliveryFee;
+            }
+            else if (request.OrderType == OrderType.Pickup)
+            {
+                if (!restaurant.SupportedDeliveryMethods.HasFlag(RestaurantDeliveryMethods.Pickup))
+                {
+                    throw new InvalidOperationException($"Restaurant '{restaurant.Name}' does not offer pickup.");
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unsupported order type: {request.OrderType}");
+            }
 
             decimal orderTotal = subtotal + deliveryFee;
 

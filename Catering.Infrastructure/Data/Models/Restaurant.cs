@@ -68,6 +68,14 @@ namespace Catering.Infrastructure.Data.Models
         public required bool IsPublic { get; set; } = false;
 
         /// <summary>
+        /// Gets or sets the delivery fee charged by the restaurant.
+        /// </summary>
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        [Comment("Delivery fee of the restaurant")]
+        public required decimal DeliveryFee { get; set; }
+
+        /// <summary>
         /// Gets or sets the URL address of the restaurant image.
         /// </summary>
         [Url]

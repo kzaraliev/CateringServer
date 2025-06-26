@@ -3,6 +3,7 @@
     /// <summary>
     /// Represents the delivery methods that a restaurant can support.
     /// </summary>
+    [Flags]
     public enum RestaurantDeliveryMethods
     {
         /// <summary>
@@ -18,11 +19,11 @@
         /// <summary>
         /// Restaurant offers delivery by their own drivers.
         /// </summary>
-        RestaurantDelivery = 2,
+        Delivery = 2,
 
         /// <summary>
         /// Restaurant supports both pickup and delivery.
         /// </summary>
-        All = Pickup | RestaurantDelivery
+        All = Pickup | Delivery
     }
 }

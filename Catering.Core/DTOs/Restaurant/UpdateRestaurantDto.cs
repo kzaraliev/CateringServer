@@ -24,6 +24,9 @@ namespace Catering.Core.DTOs.Restaurant
 
         public bool? IsPublic { get; set; }
 
+        [Range(0, double.MaxValue)]
+        public decimal? DeliveryFee { get; set; }
+
         [Url]
         public string? ImageUrl { get; set; }
 

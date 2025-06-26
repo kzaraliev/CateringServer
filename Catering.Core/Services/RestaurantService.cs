@@ -87,6 +87,7 @@ namespace Catering.Core.Services
                 Address = restaurantDto.Address,
                 OwnerId = restaurantDto.OwnerId,
                 IsPublic = false,
+                DeliveryFee = 0,
             };
 
             await repository.AddAsync(restaurant);
@@ -112,6 +113,7 @@ namespace Catering.Core.Services
             restaurant.Address = restaurantDto.Address ?? restaurant.Address;
             restaurant.IsPublic = restaurantDto.IsPublic ?? restaurant.IsPublic;
             restaurant.ImageUrl = restaurantDto.ImageUrl ?? restaurant.ImageUrl;
+            restaurant.DeliveryFee = restaurantDto.DeliveryFee ?? restaurant.DeliveryFee;
 
             if (restaurantDto.DeliveryMethod.HasValue)
             {
