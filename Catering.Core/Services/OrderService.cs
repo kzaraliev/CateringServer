@@ -90,6 +90,11 @@ namespace Catering.Core.Services
                 throw new KeyNotFoundException($"Restaurant with ID {restaurantId} not found.");
             }
 
+            if (restaurant.SupportedDeliveryMethods == RestaurantDeliveryMethods.None)
+            {
+                throw new InvalidOperationException($"Restaurant '{restaurant.Name}' does not support any order placing methods (pickup or delivery).");
+            }
+
             if (!await IsRestaurantOpenAsync(restaurant.Id, request.RequestedDeliveryTime))
             {
                 throw new InvalidOperationException("The restaurant is closed at the requested delivery/pickup time.");
